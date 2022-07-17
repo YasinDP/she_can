@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "292868887256",
+    "project_id": "she-can",
+    "storage_bucket": "she-can.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:292868887256:android:b8bdbf3ae391f18b65bdad",
+        "android_client_info": {
+          "package_name": "com.shecan.she_can"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "292868887256-r5brvgmks6758v9f6hv59pbn5i4altc2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBztsy56bEGoKvY9z3XV_65Exela4De6TI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "292868887256-r5brvgmks6758v9f6hv59pbn5i4altc2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
