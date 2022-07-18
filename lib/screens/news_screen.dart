@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
+import 'package:she_can/helper/constants.dart';
 import 'package:she_can/helper/design_config.dart';
 import 'package:she_can/helper/functions.dart';
 import 'package:she_can/models/news.dart';
+import 'package:she_can/models/user.dart';
 import 'package:she_can/providers/auth.dart';
 import 'package:she_can/providers/news.dart';
+import 'package:she_can/providers/user.dart';
 import 'package:she_can/screens/dashboard.dart';
 import 'package:she_can/helper/colors_res.dart';
 import 'package:she_can/helper/sliver_appbar_delegate.dart';
@@ -27,8 +30,6 @@ class NewsScreen extends StatefulWidget {
 }
 
 class NewsScreenState extends State<NewsScreen> with TickerProviderStateMixin {
-  late NewsNotifier newsProvider;
-
   ScrollController? scrollController;
   int currentSelected = 0, lesson = 1, id = 0, idvideo = 0;
   // FlickManager flickManager;
@@ -40,13 +41,13 @@ class NewsScreenState extends State<NewsScreen> with TickerProviderStateMixin {
   String? content;
 
   Future<void> createNews() async {
-    final newsProvider = Provider.of<NewsNotifier>(context, listen: false);
+    final newsProv = Provider.of<NewsNotifier>(context, listen: false);
 
     if (title == null || title == "" || content == null || content == "") {
       return;
     } else {
-      String image = await uploadFile();
-      newsProvider.addNews(
+      String image = pickedFile == null ? kNewsThumbnail : await uploadFile();
+      newsProv.addNews(
         image: image,
         title: title!,
         content: content!,
@@ -95,11 +96,11 @@ class NewsScreenState extends State<NewsScreen> with TickerProviderStateMixin {
     ]);
   }
 
-  @override
-  void didChangeDependencies() {
-    newsProvider = Provider.of<NewsNotifier>(context);
-    super.didChangeDependencies();
-  }
+  // @override
+  // void didChangeDependencies() {
+  //  final newsProvider = Provider.of<NewsNotifier>(context);
+  //   super.didChangeDependencies();
+  // }
 
   @override
   void dispose() {
@@ -110,6 +111,7 @@ class NewsScreenState extends State<NewsScreen> with TickerProviderStateMixin {
   Widget allNews() {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
+    final newsProvider = Provider.of<NewsNotifier>(context);
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(bottom: 60),
@@ -146,6 +148,7 @@ class NewsScreenState extends State<NewsScreen> with TickerProviderStateMixin {
   Widget myNews() {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
+    final newsProvider = Provider.of<NewsNotifier>(context);
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(bottom: 60),
@@ -318,23 +321,25 @@ class NewsScreenState extends State<NewsScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    // final newsProvider = Provider.of<NewsNotifier>(context, listen: true);
+    final authProvider = context.watch<AuthNotifier>();
+    User? currentUser = authProvider.currentUser ?? UserProvider.currentUser;
     return Scaffold(
       backgroundColor: ColorsRes.bgPage,
       resizeToAvoidBottomInset: false,
       body: newsMenu(),
-      floatingActionButton:
-          !Provider.of<AuthNotifier>(context).currentUser!.isInstructor
-              ? null
-              : Container(
-                  margin: const EdgeInsets.only(bottom: 70),
-                  child: FloatingActionButton(
-                    onPressed: _showDialog,
-                    backgroundColor: ColorsRes.appcolor,
-                    child: const Icon(
-                      Icons.add,
-                      color: Colors.white,
-                    ),
-                  )),
+      floatingActionButton: !currentUser!.isInstructor
+          ? null
+          : Container(
+              margin: const EdgeInsets.only(bottom: 70),
+              child: FloatingActionButton(
+                onPressed: _showDialog,
+                backgroundColor: ColorsRes.appcolor,
+                child: const Icon(
+                  Icons.add,
+                  color: Colors.white,
+                ),
+              )),
     );
   }
 

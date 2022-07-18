@@ -4,6 +4,7 @@ import 'package:she_can/helper/colors_res.dart';
 import 'package:she_can/models/chapter.dart';
 import 'package:she_can/models/course.dart';
 import 'package:she_can/providers/auth.dart';
+import 'package:she_can/providers/user.dart';
 import 'package:she_can/screens/courses/edit_course_screen.dart';
 import 'package:she_can/screens/video_detail_screen.dart';
 
@@ -26,7 +27,10 @@ class CourseDetailsScreen extends StatelessWidget {
         ),
         backgroundColor: ColorsRes.bgcolor,
         foregroundColor: ColorsRes.appcolor,
-        actions: !Provider.of<AuthNotifier>(context).currentUser!.isInstructor
+        // actions: !Provider.of<AuthNotifier>(context).currentUser!.isInstructor
+        actions: !(context.watch<AuthNotifier>().currentUser == null
+                ? UserProvider.currentUser!.isInstructor
+                : context.watch<AuthNotifier>().currentUser!.isInstructor)
             ? null
             : [
                 IconButton(

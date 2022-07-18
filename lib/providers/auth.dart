@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:she_can/models/user.dart';
+import 'package:she_can/providers/user.dart';
 
 class AuthNotifier with ChangeNotifier {
   User? _currentUser;
@@ -31,8 +32,10 @@ class AuthNotifier with ChangeNotifier {
       password: password,
       isInstructor: isInstructor,
     );
-    print("=========> User is ${item.toJson()}");
+    debugPrint("=========> User is ${item.toJson()}");
     _currentUser = item;
+    UserProvider.currentUser = _currentUser;
+    notifyListeners();
     // Obtain shared preferences.
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString("user", jsonEncode(item));
@@ -44,6 +47,8 @@ class AuthNotifier with ChangeNotifier {
     try {
       prefs.remove("user");
       _currentUser = null;
+      UserProvider.currentUser = _currentUser;
+      notifyListeners();
     } catch (e) {
       debugPrint("error logging out user: $e");
     }
@@ -58,6 +63,8 @@ class AuthNotifier with ChangeNotifier {
           User.fromJson(query.docs.first.data() as Map<String, dynamic>);
       if (password == user.password) {
         _currentUser = user;
+        UserProvider.currentUser = _currentUser;
+        notifyListeners();
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString("user", jsonEncode(user));
         return null;
@@ -98,16 +105,18 @@ class AuthNotifier with ChangeNotifier {
       Map<String, dynamic> userMap = jsonDecode(userValueString);
       try {
         _currentUser = User.fromJson(userMap);
+        UserProvider.currentUser = _currentUser;
+        debugPrint("current user is ${_currentUser!.toJson()}");
+        notifyListeners();
       } catch (e) {
         debugPrint("error in fetchCurrentUserProfile is : $e");
-        _currentUser = null;
       }
     }
   }
 
   Stream<bool> userStatus() async* {
     await fetchCurrentUserProfile();
-    if (currentUser == null) {
+    if (_currentUser == null) {
       yield false;
     } else {
       yield true;

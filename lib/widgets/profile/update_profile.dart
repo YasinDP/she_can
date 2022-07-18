@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:she_can/models/user.dart';
 import 'package:she_can/providers/auth.dart';
+import 'package:she_can/providers/user.dart';
 
 class UpdateProfile extends StatelessWidget {
   const UpdateProfile({
@@ -18,7 +20,8 @@ class UpdateProfile extends StatelessWidget {
   Widget build(BuildContext context) {
     // final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
-    final authProvider = Provider.of<AuthNotifier>(context);
+    final authProvider = context.watch<AuthNotifier>();
+    User currentUser = authProvider.currentUser ?? UserProvider.currentUser!;
     return SizedBox(
       height: height * 0.5,
       child: SingleChildScrollView(
@@ -39,7 +42,7 @@ class UpdateProfile extends StatelessWidget {
               children: <Widget>[
                 Expanded(
                   child: TextFormField(
-                    initialValue: authProvider.currentUser!.username,
+                    initialValue: currentUser.username,
                     autofocus: true,
                     readOnly: true,
                     decoration: const InputDecoration(labelText: 'Username'),

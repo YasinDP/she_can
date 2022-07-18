@@ -10,6 +10,7 @@ import 'package:she_can/screens/courses/course_detail_screen.dart';
 import 'package:she_can/screens/courses/edit_course_screen.dart';
 import 'package:she_can/screens/dashboard.dart';
 import 'package:she_can/screens/login/login_screen.dart';
+import 'package:she_can/screens/search_screen.dart';
 import 'package:she_can/screens/splash_screen.dart';
 import 'package:she_can/screens/video_detail_screen.dart';
 
@@ -71,6 +72,7 @@ class MyApp extends StatelessWidget {
             }),
         routes: {
           LoginScreen.routeName: (context) => const LoginScreen(),
+          SearchScreen.routeName: (context) => const SearchScreen(),
           AddCourseScreen.routeName: (context) => const AddCourseScreen(),
           CourseDetailsScreen.routeName: (context) =>
               const CourseDetailsScreen(),

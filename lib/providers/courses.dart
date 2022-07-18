@@ -8,13 +8,19 @@ import 'package:she_can/helper/functions.dart';
 import 'package:she_can/models/chapter.dart';
 import 'package:she_can/models/course.dart';
 import 'package:she_can/models/course_category.dart';
+import 'package:she_can/models/user.dart';
 import 'package:she_can/providers/auth.dart';
+import 'package:she_can/providers/user.dart';
 
 class CoursesNotifier with ChangeNotifier {
   final List<Course> _courses = [];
   List<Course> get courses => _courses;
   List<Course> get myCourses => _courses
-      .where((item) => item.instructor == AuthNotifier().currentUser!.username)
+      .where((item) =>
+          item.instructor ==
+          (AuthNotifier().currentUser == null
+              ? UserProvider.currentUser!.username
+              : AuthNotifier().currentUser!.name))
       .toList();
 
   final firestore = FirebaseFirestore.instance.collection("courses");
@@ -37,6 +43,18 @@ class CoursesNotifier with ChangeNotifier {
       firestore.snapshots().map((event) => event.docs.map((doc) {
             Course course = Course.fromJson(doc.data());
             if (course.instructor == AuthNotifier().currentUser!.username) {
+              return course;
+            }
+          }).toList());
+
+  Stream<List<Course?>> getFilteredCourses(String query) =>
+      firestore.snapshots().map((event) => event.docs.map((doc) {
+            Course course = Course.fromJson(doc.data());
+            if (course.name.toLowerCase().contains(query.toLowerCase()) ||
+                course.category.name
+                    .toLowerCase()
+                    .contains(query.toLowerCase()) ||
+                course.instructor.toLowerCase().contains(query.toLowerCase())) {
               return course;
             }
           }).toList());
@@ -81,21 +99,23 @@ class CoursesNotifier with ChangeNotifier {
     required CourseCategory category,
   }) async {
     final docCourse = firestore.doc();
+    User? currentUser = AuthNotifier().currentUser ?? UserProvider.currentUser;
     List<Chapter> chaptersWithOnlineThumbnails = [];
     for (var chapter in chapters) {
       chaptersWithOnlineThumbnails.add(await _getChapterWithOnlineUrl(chapter));
     }
     Course item = Course(
-        id: docCourse.id,
-        name: name,
-        description: description,
-        thumbnail: image == null
-            ? null
-            : await uploadFile(
-                folder: "courses", fileName: image.name, filePath: image.path!),
-        category: category,
-        chapters: chaptersWithOnlineThumbnails,
-        instructor: AuthNotifier().currentUser!.username);
+      id: docCourse.id,
+      name: name,
+      description: description,
+      thumbnail: image == null
+          ? null
+          : await uploadFile(
+              folder: "courses", fileName: image.name, filePath: image.path!),
+      category: category,
+      chapters: chaptersWithOnlineThumbnails,
+      instructor: currentUser!.username,
+    );
     print("=========> Course is ${item.toJson()}");
     docCourse.set(item.toJson());
   }
@@ -108,22 +128,24 @@ class CoursesNotifier with ChangeNotifier {
     required CourseCategory category,
   }) async {
     final docCourse = firestore.doc();
+    User? currentUser = AuthNotifier().currentUser ?? UserProvider.currentUser;
     List<Chapter> _chaptersWithOnlineThumbnails = [];
     for (var chapter in chapters) {
       _chaptersWithOnlineThumbnails
           .add(await _getChapterWithOnlineUrl(chapter));
     }
     Course item = Course(
-        id: docCourse.id,
-        name: name,
-        description: description,
-        thumbnail: image == null
-            ? null
-            : await uploadFile(
-                folder: "courses", fileName: image.name, filePath: image.path!),
-        category: category,
-        chapters: _chaptersWithOnlineThumbnails,
-        instructor: AuthNotifier().currentUser!.username);
+      id: docCourse.id,
+      name: name,
+      description: description,
+      thumbnail: image == null
+          ? null
+          : await uploadFile(
+              folder: "courses", fileName: image.name, filePath: image.path!),
+      category: category,
+      chapters: _chaptersWithOnlineThumbnails,
+      instructor: currentUser!.username,
+    );
     print("=========> Course is ${item.toJson()}");
     docCourse.update(item.toJson());
   }

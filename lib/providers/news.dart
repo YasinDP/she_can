@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:she_can/models/news.dart';
+import 'package:she_can/models/user.dart';
 import 'package:she_can/providers/auth.dart';
+import 'package:she_can/providers/user.dart';
 
 class NewsNotifier with ChangeNotifier {
   final firestore = FirebaseFirestore.instance.collection("news");
@@ -11,9 +13,12 @@ class NewsNotifier with ChangeNotifier {
 
   Stream<List<News?>> getMyNews() =>
       firestore.snapshots().map((event) => event.docs.map((doc) {
-            News _news = News.fromJson(doc.data());
-            if (_news.instructor == AuthNotifier().currentUser!.username) {
-              return _news;
+            News news = News.fromJson(doc.data());
+            if (news.instructor ==
+                (AuthNotifier().currentUser == null
+                    ? UserProvider.currentUser!.username
+                    : AuthNotifier().currentUser!.name)) {
+              return news;
             }
           }).toList());
 
@@ -23,12 +28,13 @@ class NewsNotifier with ChangeNotifier {
     required String content,
   }) async {
     final docNews = firestore.doc();
+    User? currentUser = AuthNotifier().currentUser ?? UserProvider.currentUser;
     News item = News(
       id: docNews.id,
       image: image,
       title: title,
       content: content,
-      instructor: AuthNotifier().currentUser!.username,
+      instructor: currentUser!.username,
       publishedAt: DateTime.now(),
     );
     print("=========> News is ${item.toJson()}");

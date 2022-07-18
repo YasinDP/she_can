@@ -5,10 +5,12 @@ import 'package:provider/provider.dart';
 import 'package:she_can/helper/functions.dart';
 import 'package:she_can/models/user.dart';
 import 'package:she_can/providers/auth.dart';
+import 'package:she_can/providers/user.dart';
 import 'package:she_can/screens/dashboard.dart';
 import 'package:she_can/helper/colors_res.dart';
 import 'package:she_can/helper/design_config.dart';
 import 'package:she_can/screens/login/login_screen.dart';
+import 'package:she_can/screens/search_screen.dart';
 import 'package:she_can/widgets/profile/update_profile.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -28,7 +30,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   String? currentPassword;
 
   updateProfile() {
-    User currentUser = authProvider.currentUser!;
+    User currentUser = authProvider.currentUser ?? UserProvider.currentUser!;
     if (currentPassword != currentUser.password) {
       showSnackBar(context,
           message: "The existing password you entered is incorrect");
@@ -61,7 +63,7 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void didChangeDependencies() {
-    authProvider = Provider.of<AuthNotifier>(context);
+    authProvider = context.watch<AuthNotifier>();
     super.didChangeDependencies();
   }
 
@@ -128,6 +130,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget profileMenu() {
+    User currentUser = authProvider.currentUser ?? UserProvider.currentUser!;
     return Stack(children: <Widget>[
       CustomScrollView(
         controller: scrollController,
@@ -165,12 +168,12 @@ class ProfileScreenState extends State<ProfileScreen> {
                   child: Container(
                       margin: const EdgeInsets.only(left: 18, right: 20),
                       child: Text.rich(TextSpan(
-                          text: "${authProvider.currentUser!.name}\n",
+                          text: "${currentUser.name}\n",
                           style: const TextStyle(
                               color: ColorsRes.white, fontSize: 24),
                           children: <InlineSpan>[
                             TextSpan(
-                              text: "${authProvider.currentUser!.username}\n",
+                              text: "${currentUser.username}\n",
                               style: const TextStyle(
                                   color: ColorsRes.white, fontSize: 16),
                             ),
@@ -251,9 +254,9 @@ class ProfileScreenState extends State<ProfileScreen> {
                         visualDensity:
                             const VisualDensity(horizontal: 0, vertical: -1),
                         dense: true,
-                        title: const Text(
-                          "My Courses",
-                          style: TextStyle(
+                        title: Text(
+                          currentUser.isInstructor ? "My Courses" : "Courses",
+                          style: const TextStyle(
                             fontSize: 18,
                             color: ColorsRes.black,
                           ),
@@ -262,7 +265,11 @@ class ProfileScreenState extends State<ProfileScreen> {
                           'assets/images/profile_b.svg',
                           height: 25,
                         ),
-                        onTap: () {},
+                        onTap: () => Navigator.of(context).pushNamed(
+                            SearchScreen.routeName,
+                            arguments: currentUser.isInstructor
+                                ? currentUser.username
+                                : null),
                       ),
                       ListTile(
                         visualDensity:
@@ -275,11 +282,16 @@ class ProfileScreenState extends State<ProfileScreen> {
                             color: ColorsRes.black,
                           ),
                         ),
+                        subtitle: const Text(
+                          "miniproject977@gmail.com",
+                          style: TextStyle(
+                            fontSize: 16,
+                          ),
+                        ),
                         leading: SvgPicture.asset(
                           'assets/images/profile_h.svg',
                           height: 25,
                         ),
-                        onTap: () {},
                       ),
                       const SizedBox(height: 20),
                     ]))),

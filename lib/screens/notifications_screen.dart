@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
+import 'package:she_can/models/user.dart';
 import 'package:she_can/providers/auth.dart';
 import 'package:she_can/providers/notifications.dart';
+import 'package:she_can/providers/user.dart';
 import 'package:she_can/screens/dashboard.dart';
 import 'package:she_can/helper/colors_res.dart';
 
@@ -148,6 +150,8 @@ class NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthNotifier>();
+    User? currentUser = authProvider.currentUser ?? UserProvider.currentUser;
     return WillPopScope(
       onWillPop: () {
         return Navigator.pushReplacement(
@@ -160,19 +164,18 @@ class NotificationsScreenState extends State<NotificationsScreen> {
         backgroundColor: ColorsRes.bgPage,
         resizeToAvoidBottomInset: false,
         body: notificationMenu(),
-        floatingActionButton:
-            !Provider.of<AuthNotifier>(context).currentUser!.isInstructor
-                ? null
-                : Container(
-                    margin: const EdgeInsets.only(bottom: 70),
-                    child: FloatingActionButton(
-                      onPressed: _showDialog,
-                      backgroundColor: ColorsRes.appcolor,
-                      child: const Icon(
-                        Icons.add,
-                        color: Colors.white,
-                      ),
-                    )),
+        floatingActionButton: !currentUser!.isInstructor
+            ? null
+            : Container(
+                margin: const EdgeInsets.only(bottom: 70),
+                child: FloatingActionButton(
+                  onPressed: _showDialog,
+                  backgroundColor: ColorsRes.appcolor,
+                  child: const Icon(
+                    Icons.add,
+                    color: Colors.white,
+                  ),
+                )),
       ),
     );
   }

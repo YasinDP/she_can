@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
+import 'package:she_can/models/user.dart';
 import 'package:she_can/providers/auth.dart';
 import 'package:she_can/providers/courses.dart';
+import 'package:she_can/providers/user.dart';
 import 'package:she_can/screens/courses/add_course_screen.dart';
 import 'package:she_can/screens/dashboard.dart';
 import 'package:she_can/helper/colors_res.dart';
@@ -137,7 +139,7 @@ class CoursesScreenState extends State<CoursesScreen>
                       const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
                   child: const Center(
                     child: Text(
-                      "No courses are available at the moment! Pls check back later.",
+                      "You havent created any courses of your own yet! Login as an instructor to add courses now",
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -227,6 +229,8 @@ class CoursesScreenState extends State<CoursesScreen>
 
   @override
   Widget build(BuildContext context) {
+    User? currentUser =
+        context.watch<AuthNotifier>().currentUser ?? UserProvider.currentUser;
     return WillPopScope(
       onWillPop: () {
         return Navigator.pushReplacement(
@@ -239,20 +243,19 @@ class CoursesScreenState extends State<CoursesScreen>
         backgroundColor: ColorsRes.bgPage,
         resizeToAvoidBottomInset: false,
         body: courseMenu(),
-        floatingActionButton:
-            !Provider.of<AuthNotifier>(context).currentUser!.isInstructor
-                ? null
-                : Container(
-                    margin: const EdgeInsets.only(bottom: 70),
-                    child: FloatingActionButton(
-                      onPressed: () => Navigator.of(context)
-                          .pushNamed(AddCourseScreen.routeName),
-                      backgroundColor: ColorsRes.appcolor,
-                      child: const Icon(
-                        Icons.add,
-                        color: Colors.white,
-                      ),
-                    )),
+        floatingActionButton: !currentUser!.isInstructor
+            ? null
+            : Container(
+                margin: const EdgeInsets.only(bottom: 70),
+                child: FloatingActionButton(
+                  onPressed: () => Navigator.of(context)
+                      .pushNamed(AddCourseScreen.routeName),
+                  backgroundColor: ColorsRes.appcolor,
+                  child: const Icon(
+                    Icons.add,
+                    color: Colors.white,
+                  ),
+                )),
       ),
     );
   }

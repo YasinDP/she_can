@@ -8,6 +8,7 @@ import 'package:she_can/helper/colors_res.dart';
 import 'package:she_can/helper/design_config.dart';
 import 'package:she_can/models/course_category.dart';
 import 'package:she_can/providers/courses.dart';
+import 'package:she_can/screens/search_screen.dart';
 import 'package:she_can/widgets/courses/course_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -52,7 +53,9 @@ class HomeScreenState extends State<HomeScreen> {
         children: List.generate(
             categoryList.length >= 10 ? 10 : categoryList.length,
             (i) => GestureDetector(
-                  onTap: () {},
+                  onTap: () => Navigator.of(context).pushNamed(
+                      SearchScreen.routeName,
+                      arguments: categoryList[i].name),
                   child: Container(
                       decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(5),
@@ -237,10 +240,9 @@ class HomeScreenState extends State<HomeScreen> {
                 ),
                 Container(
                     margin: EdgeInsets.only(
-                        top: MediaQuery.of(context).size.height * .13),
+                        top: MediaQuery.of(context).padding.top + 60),
                     alignment: Alignment.bottomLeft,
                     child: Column(children: [
-                      const SizedBox(height: 20),
                       Container(
                           alignment: Alignment.topLeft,
                           margin: const EdgeInsets.only(left: 18, right: 20),
@@ -260,12 +262,13 @@ class HomeScreenState extends State<HomeScreen> {
                       ),
                     ])),
                 InkWell(
-                  onTap: () => print("searching.."),
+                  onTap: () =>
+                      Navigator.of(context).pushNamed(SearchScreen.routeName),
                   child: Container(
                     margin: EdgeInsets.only(
                         left: 20,
                         right: 20,
-                        top: MediaQuery.of(context).size.height * .28),
+                        top: MediaQuery.of(context).padding.top + 160),
                     decoration: DesignConfig.boxDecorationContainer(
                         ColorsRes.white, 10),
                     child: Container(
@@ -295,27 +298,25 @@ class HomeScreenState extends State<HomeScreen> {
               ])),
           actions: <Widget>[
             FittedBox(
+                fit: BoxFit.cover,
                 child: Container(
-                    margin: EdgeInsets.all(
-                        MediaQuery.of(context).size.height * .01),
+                    margin: const EdgeInsets.all(10),
                     alignment: Alignment.bottomLeft,
-                    child: Row(children: [
-                      Container(
-                        margin: const EdgeInsets.only(left: 20),
-                        width: 45.0,
-                        height: 50.0,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(5.0),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(5.0),
-                          child: Image.asset(
-                            "assets/images/avatar.png",
-                            fit: BoxFit.contain,
-                          ),
+                    child: Container(
+                      margin: const EdgeInsets.only(left: 20),
+                      width: 50.0,
+                      height: 50.0,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5.0),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(5.0),
+                        child: Image.asset(
+                          "assets/images/avatar.png",
+                          fit: BoxFit.cover,
                         ),
                       ),
-                    ]))), //IconButton//IconButton
+                    ))), //IconButton//IconButton
           ], //FlexibleSpaceBar
           expandedHeight: MediaQuery.of(context).size.height * .3,
           backgroundColor: ColorsRes.appcolor,
@@ -352,27 +353,15 @@ class HomeScreenState extends State<HomeScreen> {
                         child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
-                              Row(children: <Widget>[
-                                const Text(
+                              Row(children: const <Widget>[
+                                Text(
                                   "Categories",
                                   style: TextStyle(
                                       color: ColorsRes.appcolor,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18),
                                 ),
-                                const Spacer(), // Defaults to a flex of one.
-                                Padding(
-                                  padding: const EdgeInsetsDirectional.only(
-                                      start: 5, top: 5, bottom: 5),
-                                  child: GestureDetector(
-                                    child: const Text("View all",
-                                        style: TextStyle(
-                                            color: ColorsRes.appcolor,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12)),
-                                    onTap: () {},
-                                  ),
-                                ),
+                                Spacer(), // Defaults to a flex of one.
                               ]),
                               const SizedBox(height: 10),
                               displayCategories(),
