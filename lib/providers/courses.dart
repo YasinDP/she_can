@@ -157,7 +157,7 @@ class CoursesNotifier with ChangeNotifier {
     required String id,
   }) async {
     final docCourse = firestore.doc(id);
-    print("=========> News is $docCourse");
+    print("=========> Course is $docCourse");
     docCourse.delete();
   }
 }

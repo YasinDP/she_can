@@ -5,6 +5,7 @@ import 'package:she_can/models/chapter.dart';
 import 'package:she_can/models/course.dart';
 import 'package:she_can/models/user.dart';
 import 'package:she_can/providers/auth.dart';
+import 'package:she_can/providers/courses.dart';
 import 'package:she_can/providers/user.dart';
 import 'package:she_can/screens/courses/edit_course_screen.dart';
 import 'package:she_can/screens/video_detail_screen.dart';
@@ -39,6 +40,11 @@ class CourseDetailsScreen extends StatelessWidget {
                       UpdateCourseScreen.routeName,
                       arguments: course),
                   icon: const Icon(Icons.edit),
+                ),
+                IconButton(
+                  onPressed: () =>
+                      _showDeleteDialog(context, courseId: course.id),
+                  icon: const Icon(Icons.delete),
                 ),
               ],
       ),
@@ -182,4 +188,37 @@ class ChapterCard extends StatelessWidget {
       ),
     );
   }
+}
+
+_showDeleteDialog(BuildContext context, {required String courseId}) async {
+  final courseProvider = context.read<CoursesNotifier>();
+  await showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      contentPadding: const EdgeInsets.all(16.0),
+      title: const Text(
+        "Delete Course !?",
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: ColorsRes.appcolor,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      content: const Text(
+          "Are you sure you want to delete this course and its chapters?"),
+      actions: <Widget>[
+        ElevatedButton(
+            child: const Text('NO'),
+            onPressed: () {
+              Navigator.pop(context);
+            }),
+        ElevatedButton(
+            child: const Text('YES'),
+            onPressed: () {
+              courseProvider.deleteCourse(id: courseId);
+              Navigator.pop(context);
+            })
+      ],
+    ),
+  );
 }
