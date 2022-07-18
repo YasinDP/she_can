@@ -8,11 +8,12 @@ import 'package:she_can/providers/user.dart';
 class NotificationsNotifier with ChangeNotifier {
   final firestore = FirebaseFirestore.instance.collection("notifications");
 
-  Stream<List<NotificationItem>> getAllNews() => firestore.snapshots().map(
-        (event) => event.docs
-            .map((doc) => NotificationItem.fromJson(doc.data()))
-            .toList(),
-      );
+  Stream<List<NotificationItem>> getAllNotifications() =>
+      firestore.snapshots().map(
+            (event) => event.docs
+                .map((doc) => NotificationItem.fromJson(doc.data()))
+                .toList(),
+          );
 
   void addNotification({
     required String title,

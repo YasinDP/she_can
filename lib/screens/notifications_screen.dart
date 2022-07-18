@@ -97,7 +97,7 @@ class NotificationsScreenState extends State<NotificationsScreen> {
         ), //SliverAppBar
         const SliverPadding(padding: EdgeInsets.only(bottom: 20)),
         StreamBuilder<List<NotificationItem>>(
-            stream: notificationsProvider.getAllNews(),
+            stream: notificationsProvider.getAllNotifications(),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 List<NotificationItem> notifications = snapshot.data!;

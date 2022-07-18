@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:she_can/helper/colors_res.dart';
 import 'package:she_can/models/chapter.dart';
 import 'package:she_can/models/course.dart';
+import 'package:she_can/models/user.dart';
 import 'package:she_can/providers/auth.dart';
 import 'package:she_can/providers/user.dart';
 import 'package:she_can/screens/courses/edit_course_screen.dart';
@@ -17,6 +18,8 @@ class CourseDetailsScreen extends StatelessWidget {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
     final course = ModalRoute.of(context)!.settings.arguments as Course;
+    User currentUser =
+        context.watch<AuthNotifier>().currentUser ?? UserProvider.currentUser!;
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -28,9 +31,7 @@ class CourseDetailsScreen extends StatelessWidget {
         backgroundColor: ColorsRes.bgcolor,
         foregroundColor: ColorsRes.appcolor,
         // actions: !Provider.of<AuthNotifier>(context).currentUser!.isInstructor
-        actions: !(context.watch<AuthNotifier>().currentUser == null
-                ? UserProvider.currentUser!.isInstructor
-                : context.watch<AuthNotifier>().currentUser!.isInstructor)
+        actions: currentUser.username != course.instructor
             ? null
             : [
                 IconButton(

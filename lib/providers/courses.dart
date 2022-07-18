@@ -42,7 +42,10 @@ class CoursesNotifier with ChangeNotifier {
   Stream<List<Course?>> getMyCourses() =>
       firestore.snapshots().map((event) => event.docs.map((doc) {
             Course course = Course.fromJson(doc.data());
-            if (course.instructor == AuthNotifier().currentUser!.username) {
+            if (course.instructor ==
+                (AuthNotifier().currentUser == null
+                    ? UserProvider.currentUser!.username
+                    : AuthNotifier().currentUser!.name)) {
               return course;
             }
           }).toList());
