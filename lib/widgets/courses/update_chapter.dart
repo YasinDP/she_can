@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:she_can/helper/colors_res.dart';
+import 'package:she_can/helper/functions.dart';
 import 'package:she_can/models/chapter.dart';
 
 class UpdateChapter extends StatefulWidget {
@@ -41,11 +42,13 @@ class _UpdateChapterState extends State<UpdateChapter> {
   void initState() {
     pickedFile = widget.chapter.image == null
         ? null
-        : PlatformFile(
-            name: widget.chapter.image!.split('/').last,
-            size: 0,
-            path: widget.chapter.image,
-          );
+        : isNetworkUrl(widget.chapter.image!)
+            ? null
+            : PlatformFile(
+                name: widget.chapter.image!.split('/').last,
+                size: 0,
+                path: widget.chapter.image,
+              );
 
     super.initState();
   }
@@ -74,22 +77,32 @@ class _UpdateChapterState extends State<UpdateChapter> {
                               fit: BoxFit.cover,
                             ),
                           )
-                        : Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: ColorsRes.appcolor,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Center(
-                                child: Text(
-                              "Select Thumbnail",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
+                        : isNetworkUrl(widget.chapter.image!)
+                            ? Container(
+                                color: ColorsRes.appcolor,
+                                // child: Text(pickedFile!.name),
+                                child: Image.network(
+                                  widget.chapter.image!,
+                                  width: width * 0.8,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: ColorsRes.appcolor,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Center(
+                                    child: Text(
+                                  "Select Thumbnail",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                )),
                               ),
-                            )),
-                          ),
                   ),
                 )
               ],

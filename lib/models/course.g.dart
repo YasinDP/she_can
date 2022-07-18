@@ -9,8 +9,8 @@ part of 'course.dart';
 Course _$CourseFromJson(Map<String, dynamic> json) => Course(
       id: json['id'] as String,
       name: json['name'] as String,
-      description: json['description'] as String,
-      thumbnail: json['thumbnail'] as String,
+      description: json['description'] as String?,
+      thumbnail: json['thumbnail'] as String?,
       category:
           CourseCategory.fromJson(json['category'] as Map<String, dynamic>),
       chapters: (json['chapters'] as List<dynamic>)

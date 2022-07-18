@@ -7,14 +7,15 @@ import 'package:provider/provider.dart';
 import 'package:she_can/helper/design_config.dart';
 import 'package:she_can/helper/functions.dart';
 import 'package:she_can/models/news.dart';
+import 'package:she_can/providers/auth.dart';
 import 'package:she_can/providers/news.dart';
 import 'package:she_can/screens/dashboard.dart';
 import 'package:she_can/helper/colors_res.dart';
 import 'package:she_can/helper/sliver_appbar_delegate.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:she_can/widgets/files/add_news.dart';
-import 'package:she_can/widgets/files/news_card.dart';
+import 'package:she_can/widgets/news/add_news.dart';
+import 'package:she_can/widgets/news/news_card.dart';
 
 class NewsScreen extends StatefulWidget {
   const NewsScreen({Key? key}) : super(key: key);
@@ -97,8 +98,6 @@ class NewsScreenState extends State<NewsScreen> with TickerProviderStateMixin {
   @override
   void didChangeDependencies() {
     newsProvider = Provider.of<NewsNotifier>(context);
-    // newsProvider.initializeNewsStream();
-    // readNews = newsProvider.news;
     super.didChangeDependencies();
   }
 
@@ -323,16 +322,19 @@ class NewsScreenState extends State<NewsScreen> with TickerProviderStateMixin {
       backgroundColor: ColorsRes.bgPage,
       resizeToAvoidBottomInset: false,
       body: newsMenu(),
-      floatingActionButton: Container(
-          margin: const EdgeInsets.only(bottom: 70),
-          child: FloatingActionButton(
-            onPressed: _showDialog,
-            backgroundColor: ColorsRes.appcolor,
-            child: const Icon(
-              Icons.add,
-              color: Colors.white,
-            ),
-          )),
+      floatingActionButton:
+          !Provider.of<AuthNotifier>(context).currentUser!.isInstructor
+              ? null
+              : Container(
+                  margin: const EdgeInsets.only(bottom: 70),
+                  child: FloatingActionButton(
+                    onPressed: _showDialog,
+                    backgroundColor: ColorsRes.appcolor,
+                    child: const Icon(
+                      Icons.add,
+                      color: Colors.white,
+                    ),
+                  )),
     );
   }
 

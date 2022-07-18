@@ -1,11 +1,15 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:octo_image/octo_image.dart';
+import 'package:provider/provider.dart';
+import 'package:she_can/helper/functions.dart';
+import 'package:she_can/models/user.dart';
+import 'package:she_can/providers/auth.dart';
 import 'package:she_can/screens/dashboard.dart';
 import 'package:she_can/helper/colors_res.dart';
 import 'package:she_can/helper/design_config.dart';
+import 'package:she_can/screens/login/login_screen.dart';
+import 'package:she_can/widgets/profile/update_profile.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -18,6 +22,29 @@ class ProfileScreen extends StatefulWidget {
 
 class ProfileScreenState extends State<ProfileScreen> {
   ScrollController? scrollController;
+  late AuthNotifier authProvider;
+  String? updatedName;
+  String? updatedPassword;
+  String? currentPassword;
+
+  updateProfile() {
+    User currentUser = authProvider.currentUser!;
+    if (currentPassword != currentUser.password) {
+      showSnackBar(context,
+          message: "The existing password you entered is incorrect");
+    }
+    if (currentUser.name != updatedName &&
+        updatedName != null &&
+        updatedName != "") {
+      authProvider.updateName(updatedName!);
+    }
+    if (currentUser.password != updatedPassword &&
+        updatedPassword != null &&
+        updatedPassword != "") {
+      authProvider.updatePassword(updatedPassword!);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -30,6 +57,12 @@ class ProfileScreenState extends State<ProfileScreen> {
       DeviceOrientation.portraitUp,
       //DeviceOrientation.portraitDown,
     ]);
+  }
+
+  @override
+  void didChangeDependencies() {
+    authProvider = Provider.of<AuthNotifier>(context);
+    super.didChangeDependencies();
   }
 
   @override
@@ -131,14 +164,14 @@ class ProfileScreenState extends State<ProfileScreen> {
                   alignment: Alignment.bottomLeft,
                   child: Container(
                       margin: const EdgeInsets.only(left: 18, right: 20),
-                      child: const Text.rich(TextSpan(
-                          text: "Madonna Sebastian\n",
-                          style:
-                              TextStyle(color: ColorsRes.white, fontSize: 24),
+                      child: Text.rich(TextSpan(
+                          text: "${authProvider.currentUser!.name}\n",
+                          style: const TextStyle(
+                              color: ColorsRes.white, fontSize: 24),
                           children: <InlineSpan>[
                             TextSpan(
-                              text: "madonna_seb\n",
-                              style: TextStyle(
+                              text: "${authProvider.currentUser!.username}\n",
+                              style: const TextStyle(
                                   color: ColorsRes.white, fontSize: 16),
                             ),
                           ]))),
@@ -148,7 +181,10 @@ class ProfileScreenState extends State<ProfileScreen> {
             actions: <Widget>[
               TextButton(
                   onPressed: () {
-                    // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LetsGetStartActivity()));
+                    Provider.of<AuthNotifier>(context, listen: false)
+                        .logoutUser();
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                        LoginScreen.routeName, (Route<dynamic> route) => false);
                   },
                   child: Container(
                     padding: const EdgeInsets.all(10),
@@ -162,10 +198,10 @@ class ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
+                        children: const [
                           Text(
                             "Logout",
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: ColorsRes.introTitlecolor, fontSize: 16),
                           ),
                         ]),
@@ -197,9 +233,9 @@ class ProfileScreenState extends State<ProfileScreen> {
                       ListTile(
                         visualDensity:
                             const VisualDensity(horizontal: 1, vertical: -1),
-                        title: Text(
+                        title: const Text(
                           "Edit Profile",
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 18,
                             color: ColorsRes.black,
                           ),
@@ -209,7 +245,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                           'assets/images/profile_a.svg',
                           height: 25,
                         ),
-                        onTap: () {},
+                        onTap: _showEditProfileDialog,
                       ),
                       ListTile(
                         visualDensity:
@@ -270,6 +306,41 @@ class ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: ColorsRes.bgPage,
         resizeToAvoidBottomInset: false,
         body: profileMenu(),
+      ),
+    );
+  }
+
+  _showEditProfileDialog() async {
+    await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        contentPadding: const EdgeInsets.all(16.0),
+        title: const Text(
+          "Update Profile",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: ColorsRes.appcolor,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        content: UpdateProfile(
+          onNameChanged: (value) => updatedName = value,
+          onPasswordChanged: (value) => updatedPassword = value,
+          onCurrentPasswordChanged: (value) => currentPassword = value,
+        ),
+        actions: <Widget>[
+          ElevatedButton(
+              child: const Text('CLOSE'),
+              onPressed: () {
+                Navigator.pop(context);
+              }),
+          ElevatedButton(
+              child: const Text('ADD'),
+              onPressed: () {
+                updateProfile();
+                Navigator.pop(context);
+              })
+        ],
       ),
     );
   }

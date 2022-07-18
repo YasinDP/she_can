@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+import 'package:she_can/helper/functions.dart';
+import 'package:she_can/providers/auth.dart';
 import 'package:she_can/screens/Login/signup_screen.dart';
-import 'package:she_can/screens/Login/update_password_screen.dart';
 import 'package:she_can/screens/dashboard.dart';
 import 'package:she_can/helper/colors_res.dart';
 import 'package:she_can/helper/design_config.dart';
 
 class LoginScreen extends StatefulWidget {
+  static const String routeName = "/login";
   const LoginScreen({Key? key}) : super(key: key);
 
   @override
@@ -17,6 +20,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class LoginScreenState extends State<LoginScreen> {
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
   @override
   void initState() {
     super.initState();
@@ -26,6 +31,26 @@ class LoginScreenState extends State<LoginScreen> {
       DeviceOrientation.portraitUp,
       //DeviceOrientation.portraitDown,
     ]);
+  }
+
+  _login() async {
+    final auth = Provider.of<AuthNotifier>(context, listen: false);
+    String username = usernameController.text;
+    String password = passwordController.text;
+    if (username.isEmpty || username.isEmpty || password.isEmpty) {
+      showSnackBar(context, message: "Please fill in all details");
+      return;
+    }
+    String? response =
+        await auth.loginUser(username: username, password: password);
+    if (response != null) {
+      if (!mounted) return;
+      showSnackBar(context, message: response);
+      return;
+    }
+    if (!mounted) return;
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (_) => const Dashboard()));
   }
 
   @override
@@ -59,9 +84,11 @@ class LoginScreenState extends State<LoginScreen> {
                 "Enter your login details to access your account",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    fontFamily: 'Nunito-Regular',
-                    fontSize: 24,
-                    color: ColorsRes.introMessagecolor),
+                  fontFamily: 'Nunito-Regular',
+                  fontSize: 18,
+                  color: ColorsRes.introMessagecolor,
+                  fontWeight: FontWeight.w500,
+                ),
               )),
           const SizedBox(height: 35),
           Container(
@@ -73,6 +100,7 @@ class LoginScreenState extends State<LoginScreen> {
                   height: 61,
                   padding: const EdgeInsets.only(left: 10),
                   child: TextFormField(
+                    controller: usernameController,
                     style: const TextStyle(color: ColorsRes.black),
                     cursorColor: ColorsRes.black,
                     decoration: InputDecoration(
@@ -95,10 +123,11 @@ class LoginScreenState extends State<LoginScreen> {
                   height: 61,
                   padding: const EdgeInsets.only(left: 10),
                   child: TextFormField(
+                    controller: passwordController,
                     style: const TextStyle(color: ColorsRes.black),
                     cursorColor: ColorsRes.black,
                     decoration: InputDecoration(
-                      hintText: "PAssword",
+                      hintText: "Password",
                       hintStyle: Theme.of(context).textTheme.subtitle2!.merge(
                           const TextStyle(
                               fontWeight: FontWeight.bold,
@@ -113,29 +142,29 @@ class LoginScreenState extends State<LoginScreen> {
                   height: 0.0,
                   thickness: 2,
                 ),
-                GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const UpdatePasswordScreen()));
-                    },
-                    child: Container(
-                        margin: const EdgeInsets.only(right: 20),
-                        height: 61,
-                        alignment: Alignment.centerRight,
-                        child: const Text("Forgot Password",
-                            textAlign: TextAlign.left,
-                            style: TextStyle(
-                                fontSize: 18,
-                                color: ColorsRes.introMessagecolor))))
+                // GestureDetector(
+                //   onTap: () {
+                //     Navigator.push(
+                //         context,
+                //         MaterialPageRoute(
+                //             builder: (_) => const UpdatePasswordScreen()));
+                //   },
+                //   child: Container(
+                //     margin: const EdgeInsets.only(right: 20),
+                //     height: 61,
+                //     alignment: Alignment.centerRight,
+                //     child: const Text(
+                //       "Forgot Password",
+                //       textAlign: TextAlign.left,
+                //       style: TextStyle(
+                //           fontSize: 18, color: ColorsRes.introMessagecolor),
+                //     ),
+                //   ),
+                // ),
               ])),
           const SizedBox(height: 43),
           TextButton(
-              onPressed: () {
-                Navigator.pushReplacement(context,
-                    MaterialPageRoute(builder: (_) => const Dashboard()));
-              },
+              onPressed: _login,
               child: Container(
                   padding: const EdgeInsets.only(left: 65),
                   margin: const EdgeInsets.only(left: 20, right: 20),
@@ -175,7 +204,7 @@ class LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 10),
           GestureDetector(
             onTap: () {
-              Navigator.push(context,
+              Navigator.pushReplacement(context,
                   MaterialPageRoute(builder: (_) => const SignUpScreen()));
             },
             child: Container(

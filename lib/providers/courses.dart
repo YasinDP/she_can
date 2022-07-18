@@ -7,23 +7,36 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:she_can/models/chapter.dart';
 import 'package:she_can/models/course.dart';
 import 'package:she_can/models/course_category.dart';
+import 'package:she_can/providers/auth.dart';
 
 class CoursesNotifier with ChangeNotifier {
   final List<Course> _courses = [];
   List<Course> get courses => _courses;
-  List<Course> get myCourses =>
-      _courses.where((item) => item.instructor == "Admin").toList();
+  List<Course> get myCourses => _courses
+      .where((item) => item.instructor == AuthNotifier().currentUser!.username)
+      .toList();
 
   final firestore = FirebaseFirestore.instance.collection("courses");
+
+  // Future<Course> getLatestCourse() async =>
+  //     Course.fromJson((await firestore.snapshots().last).docs.last.data());
+
+  Future<Course> getLatestCourse() async {
+    var snapshot = await firestore.snapshots().last;
+    var _document = snapshot.docs.last;
+    Map<String, dynamic> _map = _document.data();
+    print(_map);
+    return Course.fromJson(_map);
+  }
 
   Stream<List<Course>> getAllCourses() => firestore.snapshots().map(
       (event) => event.docs.map((doc) => Course.fromJson(doc.data())).toList());
 
   Stream<List<Course?>> getMyCourses() =>
       firestore.snapshots().map((event) => event.docs.map((doc) {
-            Course _course = Course.fromJson(doc.data());
-            if (_course.instructor == "Admin") {
-              return _course;
+            Course course = Course.fromJson(doc.data());
+            if (course.instructor == AuthNotifier().currentUser!.username) {
+              return course;
             }
           }).toList());
 
@@ -64,6 +77,33 @@ class CoursesNotifier with ChangeNotifier {
     required CourseCategory category,
   }) async {
     final docCourse = firestore.doc();
+    List<Chapter> chaptersWithOnlineThumbnails = [];
+    for (var chapter in chapters) {
+      chaptersWithOnlineThumbnails.add(await _getChapterWithOnlineUrl(chapter));
+    }
+    Course item = Course(
+        id: docCourse.id,
+        name: name,
+        description: description,
+        thumbnail: image == null
+            ? null
+            : await uploadFile(
+                folder: "courses", fileName: image.name, filePath: image.path!),
+        category: category,
+        chapters: chaptersWithOnlineThumbnails,
+        instructor: AuthNotifier().currentUser!.username);
+    print("=========> Course is ${item.toJson()}");
+    docCourse.set(item.toJson());
+  }
+
+  void updateCourse({
+    required PlatformFile? image,
+    required String name,
+    required String? description,
+    required List<Chapter> chapters,
+    required CourseCategory category,
+  }) async {
+    final docCourse = firestore.doc();
     List<Chapter> _chaptersWithOnlineThumbnails = [];
     for (var chapter in chapters) {
       _chaptersWithOnlineThumbnails
@@ -79,9 +119,9 @@ class CoursesNotifier with ChangeNotifier {
                 folder: "courses", fileName: image.name, filePath: image.path!),
         category: category,
         chapters: _chaptersWithOnlineThumbnails,
-        instructor: "Admin");
+        instructor: AuthNotifier().currentUser!.username);
     print("=========> Course is ${item.toJson()}");
-    docCourse.set(item.toJson());
+    docCourse.update(item.toJson());
   }
 
   void deleteCourse({

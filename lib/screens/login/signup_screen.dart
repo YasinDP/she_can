@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'package:she_can/helper/colors_res.dart';
 import 'package:she_can/helper/design_config.dart';
+import 'package:she_can/helper/functions.dart';
+import 'package:she_can/providers/auth.dart';
 
 import 'package:she_can/screens/dashboard.dart';
+import 'package:she_can/screens/login/login_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -16,7 +20,11 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class SignUpScreenState extends State<SignUpScreen> {
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
   bool _conobscureText = true;
+  bool isInstructor = false;
   @override
   void initState() {
     super.initState();
@@ -26,6 +34,32 @@ class SignUpScreenState extends State<SignUpScreen> {
       DeviceOrientation.portraitUp,
       //DeviceOrientation.portraitDown,
     ]);
+  }
+
+  _register() async {
+    final auth = Provider.of<AuthNotifier>(context, listen: false);
+    String name = nameController.text;
+    String username = usernameController.text;
+    String password = passwordController.text;
+    if (name.isEmpty || username.isEmpty || password.isEmpty) {
+      showSnackBar(context, message: "Please fill in all details");
+      return;
+    }
+    if (await auth.isUsernameTaken(username)) {
+      showSnackBar(context,
+          message:
+              "The username '$username' is already taken. Please enter another username");
+      return;
+    }
+    await auth.registerUser(
+      name: name,
+      username: username,
+      password: password,
+      isInstructor: isInstructor,
+    );
+    if (!mounted) return;
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (_) => const Dashboard()));
   }
 
   @override
@@ -55,15 +89,17 @@ class SignUpScreenState extends State<SignUpScreen> {
           Container(
               alignment: Alignment.center,
               margin: const EdgeInsets.only(left: 20, right: 20),
-              child: Text(
-                "Start by entering your email address below.",
+              child: const Text(
+                "Start by entering your details below.",
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontFamily: 'Nunito-Regular',
-                    fontSize: 24,
-                    color: ColorsRes.introMessagecolor),
+                style: TextStyle(
+                  fontFamily: 'Nunito-Regular',
+                  fontSize: 18,
+                  color: ColorsRes.introMessagecolor,
+                  fontWeight: FontWeight.w500,
+                ),
               )),
-          const SizedBox(height: 35),
+          const SizedBox(height: 15),
           Container(
             margin: const EdgeInsets.only(left: 20, right: 20),
             decoration:
@@ -73,6 +109,33 @@ class SignUpScreenState extends State<SignUpScreen> {
               alignment: Alignment.center,
               padding: const EdgeInsets.only(left: 10),
               child: TextFormField(
+                controller: nameController,
+                style: const TextStyle(color: ColorsRes.black),
+                cursorColor: ColorsRes.black,
+                decoration: InputDecoration(
+                  hintText: "Full Name",
+                  hintStyle: Theme.of(context).textTheme.subtitle2!.merge(
+                      const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: ColorsRes.introMessagecolor)),
+                  border: InputBorder.none,
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+            ),
+          ),
+          const SizedBox(height: 15),
+          Container(
+            margin: const EdgeInsets.only(left: 20, right: 20),
+            decoration:
+                DesignConfig.boxDecorationContainer(ColorsRes.white, 10),
+            child: Container(
+              height: 61,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.only(left: 10),
+              child: TextFormField(
+                controller: usernameController,
                 style: const TextStyle(color: ColorsRes.black),
                 cursorColor: ColorsRes.black,
                 decoration: InputDecoration(
@@ -88,7 +151,7 @@ class SignUpScreenState extends State<SignUpScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 35),
+          const SizedBox(height: 15),
           Container(
             margin: const EdgeInsets.only(left: 20, right: 20),
             decoration:
@@ -98,6 +161,7 @@ class SignUpScreenState extends State<SignUpScreen> {
               alignment: Alignment.center,
               padding: const EdgeInsets.only(left: 10),
               child: TextFormField(
+                controller: passwordController,
                 obscureText: _conobscureText,
                 obscuringCharacter: "*",
                 style: const TextStyle(color: ColorsRes.black),
@@ -133,26 +197,39 @@ class SignUpScreenState extends State<SignUpScreen> {
               ),
             ),
           ),
-          // SizedBox(height: 69),
-          // TextButton(
-          //     onPressed: () {},
-          //     child: Text(
-          //       "Already have an account?",
-          //       style: TextStyle(color: ColorsRes.introMessagecolor, fontSize: 20),
-          //     )),
-          // SizedBox(height: 12),
-          // TextButton(
-          //     onPressed: () {},
-          //     child: Text(
-          //       "SIGN IN",
-          //       style: TextStyle(color: ColorsRes.appcolor, fontSize: 20),
-          //     )),
+          const SizedBox(height: 15),
+          Container(
+            margin: const EdgeInsets.only(left: 20, right: 20),
+            decoration:
+                DesignConfig.boxDecorationContainer(ColorsRes.white, 10),
+            child: Container(
+              height: 61,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.only(left: 10),
+              child: CheckboxListTile(
+                  value: isInstructor,
+                  title: Text(
+                    "Are you an instructor !?",
+                    style: Theme.of(context).textTheme.subtitle2!.merge(
+                        const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                            color: ColorsRes.introMessagecolor)),
+                  ),
+                  checkColor: Colors.white,
+                  activeColor: ColorsRes.appcolor,
+                  onChanged: (bool? value) {
+                    if (value != null) {
+                      setState(() {
+                        isInstructor = value;
+                      });
+                    }
+                  }),
+            ),
+          ),
           const SizedBox(height: 35),
           TextButton(
-            onPressed: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const Dashboard()));
-            },
+            onPressed: _register,
             child: Container(
               padding: const EdgeInsets.only(left: 65),
               margin: const EdgeInsets.only(left: 20, right: 20),
@@ -186,23 +263,23 @@ class SignUpScreenState extends State<SignUpScreen> {
           Container(
               margin: const EdgeInsets.only(right: 20),
               alignment: Alignment.center,
-              child: Text("Already have an account?",
+              child: const Text("Already have an account?",
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 18, color: ColorsRes.introMessagecolor))),
           const SizedBox(
             height: 10,
           ),
           GestureDetector(
             onTap: () {
-              Navigator.pop(context);
+              Navigator.of(context).pushReplacementNamed(LoginScreen.routeName);
             },
             child: Container(
                 margin: const EdgeInsets.only(right: 20),
                 alignment: Alignment.center,
-                child: Text("SIGN IN",
+                child: const Text("SIGN IN",
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       color: ColorsRes.appcolor,
                     ))),

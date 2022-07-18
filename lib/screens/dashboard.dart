@@ -91,7 +91,7 @@ class DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     _fadeFabInAnimation = Tween<double>(begin: 0, end: 1).animate(
         CurvedAnimation(
             parent: _animationController,
-            curve: Interval(0.8, 1, curve: Curves.easeOut)))
+            curve: const Interval(0.8, 1, curve: Curves.easeOut)))
       ..addListener(() {
         setState(() {
           fabIconAlpha = _fadeFabInAnimation.value;
@@ -117,7 +117,7 @@ class DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => Dashboard(),
+              builder: (context) => const Dashboard(),
             ));
       });
       return false;
@@ -134,7 +134,7 @@ class DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         } else {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => Dashboard(),
+              builder: (context) => const Dashboard(),
             ),
           );
 

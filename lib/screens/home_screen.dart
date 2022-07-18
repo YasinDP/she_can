@@ -2,10 +2,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'package:she_can/models/course.dart';
 import 'package:she_can/helper/colors_res.dart';
 import 'package:she_can/helper/design_config.dart';
 import 'package:she_can/models/course_category.dart';
+import 'package:she_can/providers/courses.dart';
+import 'package:she_can/widgets/courses/course_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -17,10 +20,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> {
+  late CoursesNotifier courseProvider;
   double trendingheight = 100;
   double popularheight = 200;
   //  double trendingheight = 100;
   //double popularheight = 180;
+  late Future<Course> _future;
   @override
   void initState() {
     super.initState();
@@ -30,6 +35,13 @@ class HomeScreenState extends State<HomeScreen> {
       DeviceOrientation.portraitUp,
       //DeviceOrientation.portraitDown,
     ]);
+  }
+
+  @override
+  void didChangeDependencies() {
+    courseProvider = Provider.of<CoursesNotifier>(context);
+    _future = courseProvider.getLatestCourse();
+    super.didChangeDependencies();
   }
 
   Widget displayCategories() {
@@ -56,148 +68,104 @@ class HomeScreenState extends State<HomeScreen> {
                 )));
   }
 
-  Widget displayPopularCourse(bool isrow) {
-    return SizedBox(
-      height: isrow ? trendingheight : popularheight,
-      child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: savedCourseList.length,
-          itemBuilder: (context, index) {
-            Course savedCourse = savedCourseList[index];
-            return GestureDetector(
-                child: Container(
-                  clipBehavior: Clip.antiAliasWithSaveLayer,
-                  margin: const EdgeInsets.only(bottom: 12, right: 10),
-                  decoration:
-                      DesignConfig.boxDecorationContainer(ColorsRes.white, 10),
-                  child: SizedBox(
-                      width: isrow ? 300 : 160,
-                      child: isrow
-                          ? Row(children: <Widget>[
-                              DesignConfig.displayImage(
-                                  savedCourseList[index].thumbnail ??
-                                      "https://prod-discovery.edx-cdn.org/media/course/image/52bf4539-6137-4968-9605-6c32414dcdc4-7e805a266b31.small.png",
-                                  100,
-                                  80),
-                              Expanded(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: <Widget>[
-                                    Expanded(
-                                      child: DesignConfig.displayCourseTitle(
-                                          savedCourse.thumbnail ??
-                                              "https://prod-discovery.edx-cdn.org/media/course/image/52bf4539-6137-4968-9605-6c32414dcdc4-7e805a266b31.small.png",
-                                          2),
-                                    ),
-                                    DesignConfig.displayCourseInstructor(
-                                        savedCourse),
-                                  ],
-                                ),
-                              ),
-                            ])
-                          : Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                  Expanded(
-                                    child: DesignConfig.displayImage(
-                                      savedCourseList[index].thumbnail ??
-                                          "https://prod-discovery.edx-cdn.org/media/course/image/52bf4539-6137-4968-9605-6c32414dcdc4-7e805a266b31.small.png",
-                                      double.maxFinite,
-                                      double.maxFinite,
-                                    ),
-                                  ),
-                                  DesignConfig.displayCourseTitle(
-                                      savedCourse.name, 2),
-                                  DesignConfig.displayCourseInstructor(
-                                      savedCourse),
-                                  const SizedBox(height: 5)
-                                ])),
+  Widget popularCourses() {
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+    return StreamBuilder<List<Course>>(
+        stream: courseProvider.getAllCourses(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            List<Course> courses = snapshot.data!.reversed.toList();
+            return SizedBox(
+              width: width,
+              height: 160,
+              child: ListView.builder(
+                  padding: const EdgeInsets.all(10),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: courses.length > 6 ? 6 : courses.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return SizedBox(
+                        width: width * 0.3,
+                        height: 160,
+                        child: CourseCard(course: courses[index]));
+                  }),
+            );
+          } else {
+            return Container(
+              width: width,
+              height: height * 0.6,
+              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+              child: const Center(
+                child: Text(
+                  "No courses are available at the moment! Pls check back later.",
+                  textAlign: TextAlign.center,
                 ),
-                onTap: () {
-                  // Navigator.of(context).push(MaterialPageRoute(
-                  //     builder: (context) => CourseDetailActivityMobile(
-                  //         id: index, type: "savecourse")));
+              ),
+            );
+          }
+        });
+  }
+
+  Widget latestCourses() {
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+    return StreamBuilder<List<Course>>(
+        stream: courseProvider.getAllCourses(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            List<Course> courses = snapshot.data!;
+            return GridView.builder(
+                padding: const EdgeInsets.only(
+                    bottom: 10, left: 10, right: 10, top: 10),
+                scrollDirection: Axis.vertical,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: courses.length > 4 ? 4 : courses.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return CourseCard(course: courses[index]);
                 });
-          }),
-    );
+          } else {
+            return Container(
+              width: width,
+              height: height * 0.2,
+              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+              child: const Center(
+                child: Text(
+                  "No courses are available at the moment! Pls check back later.",
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+        });
   }
 
-  Widget topRelatedCourse() {
-    return GridView.count(
-      padding: const EdgeInsets.only(bottom: 50, top: 10),
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      childAspectRatio: 0.7,
-      physics: const ClampingScrollPhysics(),
-      children: List.generate(
-          allCourseList.length > 4 ? 4 : allCourseList.length, (index) {
-        Course allCourse = allCourseList[index];
-        return SizedBox(
-            child: GestureDetector(
-                child: Container(
-                    clipBehavior: Clip.antiAliasWithSaveLayer,
-                    margin: const EdgeInsets.only(bottom: 12, right: 10),
-                    decoration: DesignConfig.boxDecorationContainer(
-                        ColorsRes.white, 10),
-                    child: Column(
-                        mainAxisSize: MainAxisSize.max,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: <Widget>[
-                          Expanded(
-                            child: DesignConfig.displayImage(
-                              allCourseList[index].thumbnail ??
-                                  "https://prod-discovery.edx-cdn.org/media/course/image/52bf4539-6137-4968-9605-6c32414dcdc4-7e805a266b31.small.png",
-                              double.maxFinite,
-                              double.maxFinite,
-                            ),
-                          ),
-                          DesignConfig.displayCourseTitle(allCourse.name, 2),
-                          Container(
-                              margin: const EdgeInsets.only(left: 10, top: 5),
-                              alignment: Alignment.topLeft,
-                              child: Text(
-                                allCourseList[index].instructor,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    color: ColorsRes.introMessagecolor,
-                                    fontSize: 10),
-                                textAlign: TextAlign.left,
-                              )),
-                          const SizedBox(height: 5)
-                        ])),
-                onTap: () {
-                  // Navigator.of(context).push(MaterialPageRoute(
-                  //     builder: (context) => CourseDetailActivityMobile(
-                  //         id: index, type: "allcourse")));
-                }));
-      }),
-    );
-  }
-
-  Widget displayNewCourse(bool isrow) {
+  Widget displayNewCourse() {
     return SizedBox(
-      height: isrow ? trendingheight : popularheight,
-      child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: myCourseList.length,
-          itemBuilder: (context, index) {
-            Course myCourse = myCourseList[index];
-            return GestureDetector(
-                child: Container(
-                  clipBehavior: Clip.antiAliasWithSaveLayer,
-                  margin: const EdgeInsets.only(bottom: 12, right: 10),
-                  decoration:
-                      DesignConfig.boxDecorationContainer(ColorsRes.white, 10),
-                  child: SizedBox(
-                      width: isrow ? 300 : 160,
-                      child: isrow
-                          ? Row(children: <Widget>[
+      child: FutureBuilder(
+        future: _future,
+        builder: (ctx, snapshot) {
+          print(snapshot);
+          if (snapshot.hasData &&
+              ConnectionState.done == snapshot.connectionState) {
+            Course course = snapshot.data as Course;
+            return ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: course.chapters.length,
+                itemBuilder: (context, index) {
+                  return GestureDetector(
+                      child: Container(
+                        clipBehavior: Clip.antiAliasWithSaveLayer,
+                        margin: const EdgeInsets.only(bottom: 12, right: 10),
+                        decoration: DesignConfig.boxDecorationContainer(
+                            ColorsRes.white, 10),
+                        child: SizedBox(
+                            width: 300,
+                            child: Row(children: <Widget>[
                               DesignConfig.displayImage(
-                                  allCourseList[index].thumbnail ??
+                                  course.chapters[index].image ??
                                       "https://prod-discovery.edx-cdn.org/media/course/image/52bf4539-6137-4968-9605-6c32414dcdc4-7e805a266b31.small.png",
                                   100,
                                   100),
@@ -209,111 +177,32 @@ class HomeScreenState extends State<HomeScreen> {
                                   children: <Widget>[
                                     Expanded(
                                       child: DesignConfig.displayCourseTitle(
-                                          myCourse.name, 2),
+                                          course.chapters[index].title, 2),
                                     ),
                                     DesignConfig.displayCourseInstructor(
-                                        myCourse),
+                                        course),
                                   ],
                                 ),
                               ),
-                            ])
-                          : Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                  Expanded(
-                                    child: DesignConfig.displayImage(
-                                      allCourseList[index].thumbnail ??
-                                          "https://prod-discovery.edx-cdn.org/media/course/image/52bf4539-6137-4968-9605-6c32414dcdc4-7e805a266b31.small.png",
-                                      double.maxFinite,
-                                      double.maxFinite,
-                                    ),
-                                  ),
-                                  DesignConfig.displayCourseTitle(
-                                      myCourse.name, 2),
-                                  const SizedBox(height: 5)
-                                ])),
-                ),
-                onTap: () {
-                  //   Navigator.of(context).push(MaterialPageRoute(
-                  //       builder: (context) => CourseDetailActivityMobile(
-                  //           id: index, type: "mycourse")));
+                            ])),
+                      ),
+                      onTap: () {
+                        //   Navigator.of(context).push(MaterialPageRoute(
+                        //       builder: (context) => CourseDetailActivityMobile(
+                        //           id: index, type: "mycourse")));
+                      });
                 });
-          }),
-    );
-  }
+          } else {
+            // Displaying LoadingSpinner to indicate waiting state
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        },
 
-  Widget displayTopRatedCourse(bool isrow) {
-    return SizedBox(
-      height: isrow ? trendingheight : popularheight,
-      child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: allCourseList.length,
-          itemBuilder: (context, index) {
-            Course allCourse = allCourseList[index];
-            return GestureDetector(
-                child: Container(
-                  clipBehavior: Clip.antiAliasWithSaveLayer,
-                  margin: const EdgeInsets.only(bottom: 12, right: 10),
-                  decoration:
-                      DesignConfig.boxDecorationContainer(ColorsRes.white, 10),
-                  child: SizedBox(
-                      width: isrow ? 300 : 160,
-                      child: isrow
-                          ? Row(children: <Widget>[
-                              DesignConfig.displayImage(
-                                  allCourseList[index].thumbnail ??
-                                      "https://prod-discovery.edx-cdn.org/media/course/image/52bf4539-6137-4968-9605-6c32414dcdc4-7e805a266b31.small.png",
-                                  100,
-                                  80),
-                              Expanded(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: <Widget>[
-                                    Expanded(
-                                      child: DesignConfig.displayCourseTitle(
-                                          allCourse.name, 2),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ])
-                          : Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                  Expanded(
-                                    child: DesignConfig.displayImage(
-                                      allCourseList[index].thumbnail ??
-                                          "https://prod-discovery.edx-cdn.org/media/course/image/52bf4539-6137-4968-9605-6c32414dcdc4-7e805a266b31.small.png",
-                                      double.maxFinite,
-                                      double.maxFinite,
-                                    ),
-                                  ),
-                                  DesignConfig.displayCourseTitle(
-                                      allCourse.name, 2),
-                                  Container(
-                                      margin: const EdgeInsets.only(
-                                          left: 10, top: 5),
-                                      alignment: Alignment.topLeft,
-                                      child: Text(
-                                        allCourseList[index].instructor,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                            color: ColorsRes.introMessagecolor,
-                                            fontSize: 10),
-                                        textAlign: TextAlign.left,
-                                      )),
-                                  const SizedBox(height: 5)
-                                ])),
-                ),
-                onTap: () {
-                  // Navigator.of(context).push(MaterialPageRoute(
-                  //     builder: (context) => CourseDetailActivityMobile(
-                  //         id: index, type: "allcourse")));
-                });
-          }),
+        // Future that needs to be resolved
+        // inorder to display something on the Canvas
+      ),
     );
   }
 
@@ -464,9 +353,9 @@ class HomeScreenState extends State<HomeScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
                               Row(children: <Widget>[
-                                Text(
+                                const Text(
                                   "Categories",
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       color: ColorsRes.appcolor,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18),
@@ -476,8 +365,8 @@ class HomeScreenState extends State<HomeScreen> {
                                   padding: const EdgeInsetsDirectional.only(
                                       start: 5, top: 5, bottom: 5),
                                   child: GestureDetector(
-                                    child: Text("View all",
-                                        style: const TextStyle(
+                                    child: const Text("View all",
+                                        style: TextStyle(
                                             color: ColorsRes.appcolor,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 12)),
@@ -488,136 +377,61 @@ class HomeScreenState extends State<HomeScreen> {
                               const SizedBox(height: 10),
                               displayCategories(),
                             ])),
-                myCourseList.isNotEmpty
-                    ? Padding(
-                        padding: const EdgeInsetsDirectional.only(
-                            top: 15, start: 10, end: 10),
-                        child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Row(children: <Widget>[
-                                Text(
-                                  " Courses",
-                                  style: const TextStyle(
-                                      color: ColorsRes.appcolor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18),
-                                ),
-                                const Spacer(), // Defaults to a flex of one.
-                                Padding(
-                                  padding: const EdgeInsetsDirectional.only(
-                                      start: 5, top: 5, bottom: 5),
-                                  child: GestureDetector(
-                                    child: Text("View all",
-                                        style: const TextStyle(
-                                            color: ColorsRes.appcolor,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12)),
-                                    onTap: () {},
-                                  ),
-                                ),
-                              ]),
-                              const SizedBox(height: 5),
-                              displayNewCourse(true),
-                            ]))
-                    : Container(),
-                allCourseList.isNotEmpty
-                    ? Padding(
-                        padding: const EdgeInsetsDirectional.only(
-                            top: 10, start: 10, end: 10),
-                        child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Row(children: <Widget>[
-                                Text(
-                                  "Top Rated Course",
-                                  style: const TextStyle(
-                                      color: ColorsRes.appcolor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18),
-                                ),
-                                const Spacer(), // Defaults to a flex of one.
-                                Padding(
-                                  padding: const EdgeInsetsDirectional.only(
-                                      start: 5, top: 5, bottom: 5),
-                                  child: GestureDetector(
-                                    child: Text("View all",
-                                        style: const TextStyle(
-                                            color: ColorsRes.appcolor,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12)),
-                                    onTap: () {},
-                                  ),
-                                ),
-                              ]),
-                              const SizedBox(height: 5),
-                              displayTopRatedCourse(false),
-                            ]))
-                    : Container(),
-                allCourseList.isNotEmpty
-                    ? Padding(
-                        padding: const EdgeInsetsDirectional.only(
-                            top: 10, start: 10, end: 10),
-                        child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Row(children: <Widget>[
-                                Text(
-                                  "Popular Course",
-                                  style: const TextStyle(
-                                      color: ColorsRes.appcolor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18),
-                                ),
-                                const Spacer(), // Defaults to a flex of one.
-                                Padding(
-                                  padding: const EdgeInsetsDirectional.only(
-                                      start: 5, top: 5, bottom: 5),
-                                  child: GestureDetector(
-                                    child: Text("View all",
-                                        style: const TextStyle(
-                                            color: ColorsRes.appcolor,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12)),
-                                    onTap: () {},
-                                  ),
-                                ),
-                              ]),
-                              displayPopularCourse(false),
-                            ]))
-                    : Container(),
-                allCourseList.isNotEmpty
-                    ? Padding(
-                        padding: const EdgeInsetsDirectional.only(
-                            top: 10, start: 10, end: 10),
-                        child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Row(children: <Widget>[
-                                Text(
-                                  "Top Courses",
-                                  style: const TextStyle(
-                                      color: ColorsRes.appcolor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18),
-                                ),
-                                const Spacer(), // Defaults to a flex of one.
-                                Padding(
-                                  padding: const EdgeInsetsDirectional.only(
-                                      start: 5, top: 5, bottom: 5),
-                                  child: GestureDetector(
-                                    child: Text("View all",
-                                        style: const TextStyle(
-                                            color: ColorsRes.appcolor,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12)),
-                                    onTap: () {},
-                                  ),
-                                ),
-                              ]),
-                              topRelatedCourse(),
-                            ]))
-                    : Container(),
+                // Padding(
+                //     padding: const EdgeInsetsDirectional.only(
+                //         top: 15, start: 10, end: 10),
+                //     child: Column(
+                //         mainAxisSize: MainAxisSize.min,
+                //         children: <Widget>[
+                //           Row(children: const <Widget>[
+                //             Text(
+                //               " Courses",
+                //               style: TextStyle(
+                //                   color: ColorsRes.appcolor,
+                //                   fontWeight: FontWeight.bold,
+                //                   fontSize: 18),
+                //             ),
+                //             Spacer(), // Defaults to a flex of one.
+                //           ]),
+                //           const SizedBox(height: 5),
+                //           displayNewCourse(),
+                //         ])),
+                Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                        top: 10, start: 10, end: 10),
+                    child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Row(children: const <Widget>[
+                            Text(
+                              "Popular Course",
+                              style: TextStyle(
+                                  color: ColorsRes.appcolor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18),
+                            ),
+                            Spacer(), // Defaults to a flex of one.
+                          ]),
+                          popularCourses(),
+                        ])),
+                Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                        top: 10, start: 10, end: 10),
+                    child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Row(children: const <Widget>[
+                            Text(
+                              "Latest Courses",
+                              style: TextStyle(
+                                  color: ColorsRes.appcolor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18),
+                            ),
+                            Spacer(), // Defaults to a flex of one.
+                          ]),
+                          latestCourses(),
+                        ])),
                 const SizedBox(height: 60),
               ]),
         ]) //SliverChildBuildDelegate

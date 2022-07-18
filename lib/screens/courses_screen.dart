@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+import 'package:she_can/providers/auth.dart';
+import 'package:she_can/providers/courses.dart';
 import 'package:she_can/screens/courses/add_course_screen.dart';
 import 'package:she_can/screens/dashboard.dart';
 import 'package:she_can/helper/colors_res.dart';
-import 'package:she_can/helper/design_config.dart';
 import 'package:she_can/helper/sliver_appbar_delegate.dart';
 
 import 'package:she_can/models/course.dart';
+import 'package:she_can/widgets/courses/course_card.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({Key? key}) : super(key: key);
@@ -20,6 +23,7 @@ class CoursesScreen extends StatefulWidget {
 
 class CoursesScreenState extends State<CoursesScreen>
     with TickerProviderStateMixin {
+  late CoursesNotifier courseProvider;
   ScrollController? scrollController;
   TabController? _controller;
   int _selectedIndex = 0;
@@ -44,175 +48,102 @@ class CoursesScreenState extends State<CoursesScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    courseProvider = Provider.of<CoursesNotifier>(context);
+    super.didChangeDependencies();
+  }
+
+  @override
   void dispose() {
     scrollController!.dispose();
     super.dispose();
   }
 
   Widget allCourses() {
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.only(bottom: 60),
-      child: GridView.count(
-        padding: const EdgeInsets.only(bottom: 10, left: 10, right: 0, top: 10),
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        childAspectRatio: 0.8,
-        physics: const ClampingScrollPhysics(),
-        children: List.generate(allCourseList.length, (index) {
-          Course allCourse = allCourseList[index];
-          return SizedBox(
-              child: GestureDetector(
-                  child: Container(
-                      clipBehavior: Clip.antiAliasWithSaveLayer,
-                      margin: const EdgeInsets.only(bottom: 12, right: 10),
-                      decoration: DesignConfig.boxDecorationContainer(
-                          ColorsRes.white, 10),
-                      child: Column(
-                          mainAxisSize: MainAxisSize.max,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: <Widget>[
-                            Expanded(
-                              child: DesignConfig.displayImage(
-                                allCourseList[index].thumbnail ??
-                                    "https://prod-discovery.edx-cdn.org/media/course/image/52bf4539-6137-4968-9605-6c32414dcdc4-7e805a266b31.small.png",
-                                double.maxFinite,
-                                double.maxFinite,
-                              ),
-                            ),
-                            DesignConfig.displayCourseTitle(allCourse.name, 2),
-                            Container(
-                                margin: const EdgeInsets.only(left: 10, top: 5),
-                                alignment: Alignment.topLeft,
-                                child: Text(
-                                  allCourseList[index].instructor,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                      color: ColorsRes.introMessagecolor,
-                                      fontSize: 10),
-                                  textAlign: TextAlign.left,
-                                )),
-                            const SizedBox(height: 5)
-                          ])),
-                  onTap: () {
-                    // Navigator.of(context).push(MaterialPageRoute(
-                    //     builder: (context) => CourseDetailActivityMobile(
-                    //           id: index,
-                    //           type: "allcourse",
-                    //         )));
-                  }));
-        }),
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+    return SizedBox(
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 60),
+        child: StreamBuilder<List<Course>>(
+            stream: courseProvider.getAllCourses(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                List<Course> courses = snapshot.data!;
+                return GridView.builder(
+                    padding: const EdgeInsets.only(
+                        bottom: 10, left: 10, right: 10, top: 10),
+                    scrollDirection: Axis.vertical,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2),
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: courses.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return CourseCard(course: courses[index]);
+                    });
+              } else {
+                return Container(
+                  width: width,
+                  height: height * 0.6,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                  child: const Center(
+                    child: Text(
+                      "No courses are available at the moment! Pls check back later.",
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }
+            }),
       ),
     );
   }
 
   Widget myCourses() {
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.only(bottom: 60),
-      child: ListView.builder(
-        padding:
-            const EdgeInsets.only(bottom: 10, left: 10, right: 10, top: 10),
-        shrinkWrap: true,
-        controller: scrollController,
-        physics: const ClampingScrollPhysics(),
-        itemBuilder: (BuildContext context, int index) {
-          Course item = myCourseList[index];
-          return GestureDetector(
-            onTap: () {
-              // Navigator.of(context).push(MaterialPageRoute(
-              //     builder: (context) => CourseDetailActivityMobile(
-              //           id: index,
-              //           type: "mycourse",
-              //         )));
-            },
-            child: Container(
-              clipBehavior: Clip.antiAliasWithSaveLayer,
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration:
-                  DesignConfig.boxDecorationContainer(ColorsRes.white, 10),
-              child: IntrinsicHeight(
-                child: Row(children: <Widget>[
-                  DesignConfig.displayImage(
-                      myCourseList[index].thumbnail ??
-                          "https://prod-discovery.edx-cdn.org/media/course/image/52bf4539-6137-4968-9605-6c32414dcdc4-7e805a266b31.small.png",
-                      100,
-                      100),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: <Widget>[
-                        DesignConfig.displayCourseTitle(
-                            myCourseList[index].name, 2),
-                        DesignConfig.displayCourseInstructor(item),
-                      ],
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+    return SizedBox(
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 60),
+        child: StreamBuilder<List<Course?>>(
+            stream: courseProvider.getMyCourses(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                List<Course> courses =
+                    snapshot.data!.whereType<Course>().toList();
+                return GridView.builder(
+                    padding: const EdgeInsets.only(
+                        bottom: 10, left: 10, right: 10, top: 10),
+                    scrollDirection: Axis.vertical,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2),
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: courses.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return CourseCard(course: courses[index]);
+                    });
+              } else {
+                return Container(
+                  width: width,
+                  height: height * 0.6,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                  child: const Center(
+                    child: Text(
+                      "No courses are available at the moment! Pls check back later.",
+                      textAlign: TextAlign.center,
                     ),
                   ),
-                ]),
-              ),
-            ),
-          );
-        },
-        itemCount: myCourseList.length,
-      ),
-    );
-  }
-
-  Widget savedCourses() {
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.only(bottom: 60),
-      child: ListView.builder(
-        padding:
-            const EdgeInsets.only(bottom: 10, left: 10, right: 10, top: 10),
-        shrinkWrap: true,
-        controller: scrollController,
-        physics: const ClampingScrollPhysics(),
-        itemBuilder: (BuildContext context, int index) {
-          Course item = savedCourseList[index];
-          return GestureDetector(
-            onTap: () {
-              // Navigator.of(context).push(MaterialPageRoute(
-              //     builder: (context) => CourseDetailActivityMobile(
-              //           id: index,
-              //           type: "savecourse",
-              //         )));
-            },
-            child: Container(
-              clipBehavior: Clip.antiAliasWithSaveLayer,
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration:
-                  DesignConfig.boxDecorationContainer(ColorsRes.white, 10),
-              child: IntrinsicHeight(
-                child: Row(children: <Widget>[
-                  DesignConfig.displayImage(
-                      savedCourseList[index].thumbnail ??
-                          "https://prod-discovery.edx-cdn.org/media/course/image/52bf4539-6137-4968-9605-6c32414dcdc4-7e805a266b31.small.png",
-                      100,
-                      100),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: <Widget>[
-                        DesignConfig.displayCourseTitle(
-                            savedCourseList[index].name, 2),
-                        DesignConfig.displayCourseInstructor(
-                            savedCourseList[index]),
-                      ],
-                    ),
-                  ),
-                ]),
-              ),
-            ),
-          );
-        },
-        itemCount: savedCourseList.length,
+                );
+              }
+            }),
       ),
     );
   }
@@ -308,17 +239,20 @@ class CoursesScreenState extends State<CoursesScreen>
         backgroundColor: ColorsRes.bgPage,
         resizeToAvoidBottomInset: false,
         body: courseMenu(),
-        floatingActionButton: Container(
-            margin: const EdgeInsets.only(bottom: 70),
-            child: FloatingActionButton(
-              onPressed: () =>
-                  Navigator.of(context).pushNamed(AddCourseScreen.routeName),
-              backgroundColor: ColorsRes.appcolor,
-              child: const Icon(
-                Icons.add,
-                color: Colors.white,
-              ),
-            )),
+        floatingActionButton:
+            !Provider.of<AuthNotifier>(context).currentUser!.isInstructor
+                ? null
+                : Container(
+                    margin: const EdgeInsets.only(bottom: 70),
+                    child: FloatingActionButton(
+                      onPressed: () => Navigator.of(context)
+                          .pushNamed(AddCourseScreen.routeName),
+                      backgroundColor: ColorsRes.appcolor,
+                      child: const Icon(
+                        Icons.add,
+                        color: Colors.white,
+                      ),
+                    )),
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class TabItem extends StatefulWidget {
+  // ignore: use_key_in_widget_constructors
   const TabItem(
       {required this.selected,
       required this.iconData,
@@ -60,13 +61,14 @@ class TabItemState extends State<TabItem> {
             height: double.infinity,
             width: double.infinity,
             child: AnimatedAlign(
-                duration: Duration(milliseconds: animDuration),
+                duration: const Duration(milliseconds: animDuration),
                 alignment: Alignment(0, textYAlign),
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
                     widget.title,
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 10),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 10),
                   ),
                 )),
           ),
@@ -74,17 +76,17 @@ class TabItemState extends State<TabItem> {
             height: double.infinity,
             width: double.infinity,
             child: AnimatedAlign(
-              duration: Duration(milliseconds: animDuration),
+              duration: const Duration(milliseconds: animDuration),
               curve: Curves.easeIn,
               alignment: Alignment(0, iconYAlign),
               child: AnimatedOpacity(
-                duration: Duration(milliseconds: animDuration),
+                duration: const Duration(milliseconds: animDuration),
                 opacity: iconAlpha,
                 child: IconButton(
                   highlightColor: Colors.transparent,
                   splashColor: Colors.transparent,
-                  padding: EdgeInsets.all(0),
-                  alignment: Alignment(0, 0),
+                  padding: const EdgeInsets.all(0),
+                  alignment: const Alignment(0, 0),
                   icon: Icon(
                     widget.iconData,
                     color: Colors.grey,

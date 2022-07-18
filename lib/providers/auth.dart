@@ -1,136 +1,116 @@
+import 'dart:convert';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:she_can/models/user.dart';
 
 class AuthNotifier with ChangeNotifier {
-  // Future<void> registerUser(data) async {
-  //   try {
-  //     String url = kBaseUrl + "api/v1/customers/register/";
-  //     var res = await http.post(Uri.parse(url), headers: {
-  //       'Accept': 'application/json',
-  //       "Content-Type": "application/x-www-form-urlencoded",
-  //     }, body: {
-  //       "phone": data.phoneNumber,
-  //     });
-  //     if (res.body.isNotEmpty && res.statusCode == 200) {
-  //       var respBody = json.decode(res.body);
-  //       print(respBody);
-  //     } else {
-  //       print("Empty body or status failed");
-  //     }
-  //   } catch (e) {
-  //     throw (e);
-  //   }
-  // }
+  User? _currentUser;
+  User? get currentUser => _currentUser;
 
-  // Customer? _customer;
+  final firestore = FirebaseFirestore.instance.collection("users");
 
-  // Customer? get customer {
-  //   return _customer;
-  // }
+  Future<bool> isUsernameTaken(String username) async {
+    QuerySnapshot query =
+        await firestore.where('username', isEqualTo: username).get();
+    return query.docs.isNotEmpty;
+  }
 
-  // Future<void> signup(
-  //   String? phone,
-  // ) async {
-  //   // print("======>>>>> signing up user");
-  //   // final url = kBaseURL + 'api/v1/users/register-customer/';
-  //   try {
-  //     final prefs = await SharedPreferences.getInstance();
+  Future<void> registerUser({
+    required String name,
+    required String username,
+    required String password,
+    required bool isInstructor,
+  }) async {
+    final docUser = firestore.doc();
+    User item = User(
+      id: docUser.id,
+      name: name,
+      username: username,
+      password: password,
+      isInstructor: isInstructor,
+    );
+    print("=========> User is ${item.toJson()}");
+    _currentUser = item;
+    // Obtain shared preferences.
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("user", jsonEncode(item));
+    docUser.set(item.toJson());
+  }
 
-  //     // if (prefs.containsKey('phone')) {
-  //     //   if (prefs.getString('phone') == phone) {
-  //     //     print("User already exists");
-  //     //   } else {
-  //     //     _signIn(phone!, prefs);
-  //     //   }
-  //     // } else {
-  //     //   _signIn(phone!, prefs);
-  //     // }
-  //     _signIn(phone!, prefs);
+  Future<void> logoutUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    try {
+      prefs.remove("user");
+      _currentUser = null;
+    } catch (e) {
+      debugPrint("error logging out user: $e");
+    }
+  }
 
-  //     notifyListeners();
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
+  Future<String?> loginUser(
+      {required String username, required String password}) async {
+    QuerySnapshot query =
+        await firestore.where('username', isEqualTo: username).get();
+    if (query.docs.isNotEmpty) {
+      User user =
+          User.fromJson(query.docs.first.data() as Map<String, dynamic>);
+      if (password == user.password) {
+        _currentUser = user;
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString("user", jsonEncode(user));
+        return null;
+      } else {
+        return "Wrong password";
+      }
+    } else {
+      return "Username doesnt exist. Please register if you are a new user";
+    }
+  }
 
-  // void _signIn(String phone, prefs) async {
-  //   final url = kBaseUrl + 'api/v1/customers/check-and-login/';
-  //   // print("======>>>>> signing in user");
-  //   final response = await http.post(
-  //     Uri.parse(url),
-  //     body: {
-  //       'phone': phone,
-  //     },
-  //   );
-  //   final responseData = json.decode(response.body);
-  //   // print("======>>$responseData");
-  //   if (responseData['error'] != null) {
-  //     throw HttpException(responseData['error']['message']);
-  //   }
+  Future<void> updateName(String name) async {
+    final docUser = firestore.doc(_currentUser!.id);
+    User newUser = User(
+        id: _currentUser!.id,
+        name: name,
+        username: _currentUser!.username,
+        password: _currentUser!.password,
+        isInstructor: _currentUser!.isInstructor);
+    docUser.update(newUser.toJson());
+  }
 
-  //   prefs.setString('phone', phone);
-  //   prefs.setString('token', responseData['token']['access']);
-  //   // prefs.setString('password', responseData['password']);
-  //   print(responseData);
-  // }
+  Future<void> updatePassword(String password) async {
+    final docUser = firestore.doc(_currentUser!.id);
+    User newUser = User(
+        id: _currentUser!.id,
+        name: _currentUser!.name,
+        username: _currentUser!.username,
+        password: password,
+        isInstructor: _currentUser!.isInstructor);
+    docUser.update(newUser.toJson());
+  }
 
-  // void updateUser(String? username, String? email) async {
-  //   print("updating user");
-  //   try {
-  //     String url = kBaseUrl + "api/v1/customers/update-profile/";
-  //     final prefs = await SharedPreferences.getInstance();
-  //     String token = prefs.getString('token').toString();
-  //     var res = await http.post(Uri.parse(url), headers: {
-  //       'Accept': 'application/json',
-  //       "Content-Type": "application/x-www-form-urlencoded",
-  //       'Authorization': 'Bearer $token',
-  //     }, body: {
-  //       'name': username,
-  //       'email': email,
-  //     });
-  //     if (res.body.isNotEmpty && res.statusCode == 200) {
-  //       var respBody = json.decode(res.body);
-  //       await getUserData();
-  //       print(respBody);
-  //     } else {
-  //       print("Empty body or status failed");
-  //     }
-  //   } catch (e) {
-  //     throw (e);
-  //   }
-  // }
+  Future<void> fetchCurrentUserProfile() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userValueString = prefs.getString("user");
+    if (userValueString != null) {
+      Map<String, dynamic> userMap = jsonDecode(userValueString);
+      try {
+        _currentUser = User.fromJson(userMap);
+      } catch (e) {
+        debugPrint("error in fetchCurrentUserProfile is : $e");
+        _currentUser = null;
+      }
+    }
+  }
 
-  // Future<Customer> getUserData() async {
-  //   print("get user data fn");
-  //   String url = kBaseUrl + "api/v1/customers/get-profile";
-  //   final prefs = await SharedPreferences.getInstance();
-  //   String token = prefs.getString('token').toString();
-  //   try {
-  //     final response = await http.get(Uri.parse(url), headers: {
-  //       'Accept': 'application/json',
-  //       "Content-Type": "application/x-www-form-urlencoded",
-  //       'Authorization': 'Bearer $token',
-  //     });
-  //     // print("response is $response");
-  //     final extractedData = jsonDecode(response.body) as Map<String, dynamic>;
-  //     print("extractedData is ${extractedData['data']}");
-  //     Customer customer = new Customer(
-  //       id: extractedData['data']['id'].toString(),
-  //       name: extractedData['data']['name'],
-  //       phone: prefs.getString('userPhone').toString(),
-  //       email: extractedData['data']['email'],
-  //     );
-  //     _customer = customer;
-  //     print("customer is $customer");
-  //     notifyListeners();
-  //     return customer;
-  //     // print(_categories);
-  //   } catch (error) {
-  //     print("error is $error");
-  //     throw (error);
-  //   }
-  // }
-
-  // valueUpdate() {
-  //   notifyListeners();
-  // }
+  Stream<bool> userStatus() async* {
+    await fetchCurrentUserProfile();
+    if (currentUser == null) {
+      yield false;
+    } else {
+      yield true;
+    }
+  }
 }

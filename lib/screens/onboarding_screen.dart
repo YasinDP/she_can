@@ -33,14 +33,14 @@ class OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
+      value: const SystemUiOverlayStyle(
         statusBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         body: Column(
           children: [
-            SizedBox(height: 78),
+            const SizedBox(height: 78),
             Expanded(
               child: PageView.builder(
                 controller: _controller,
@@ -81,47 +81,51 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                               ),
                             )),
                         const SizedBox(height: 30),
-                        Align(
-                            alignment: AlignmentDirectional.topStart,
-                            child: Container(
-                              alignment: AlignmentDirectional.topCenter,
-                              height: 48,
-                              margin: const EdgeInsets.only(left: 20),
-                              width: 176,
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                    colors: [
-                                      ColorsRes.secondgradientcolor,
-                                      ColorsRes.firstgradientcolor,
-                                    ],
-                                    begin: Alignment.centerLeft,
-                                    end: Alignment.centerRight),
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              child: TextButton(
-                                  onPressed: () {
-                                    if (currentIndex == contents.length - 1) {
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => const LoginScreen(),
-                                        ),
-                                      );
-                                    }
-                                    _controller!.nextPage(
-                                      duration:
-                                          const Duration(milliseconds: 100),
-                                      curve: Curves.bounceIn,
-                                    );
-                                  },
+                        InkWell(
+                          onTap: () {
+                            if (currentIndex == contents.length - 1) {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const LoginScreen(),
+                                ),
+                              );
+                            }
+                            _controller!.nextPage(
+                              duration: const Duration(milliseconds: 100),
+                              curve: Curves.bounceIn,
+                            );
+                          },
+                          child: Align(
+                              alignment: AlignmentDirectional.topStart,
+                              child: Container(
+                                alignment: AlignmentDirectional.topCenter,
+                                height: 48,
+                                margin: const EdgeInsets.only(left: 20),
+                                width: 176,
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                      colors: [
+                                        ColorsRes.secondgradientcolor,
+                                        ColorsRes.firstgradientcolor,
+                                      ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight),
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Center(
                                   child: Text(
                                     currentIndex == contents.length - 1
                                         ? "Get Started"
                                         : "Next",
                                     style: const TextStyle(
-                                        fontSize: 18, color: ColorsRes.white),
-                                  )),
-                            )),
+                                        fontSize: 18,
+                                        color: ColorsRes.white,
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                ),
+                              )),
+                        ),
                         const SizedBox(height: 30),
                         Container(
                           margin: const EdgeInsets.only(left: 20),

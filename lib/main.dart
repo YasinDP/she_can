@@ -4,8 +4,14 @@ import 'package:provider/provider.dart';
 import 'package:she_can/providers/auth.dart';
 import 'package:she_can/providers/courses.dart';
 import 'package:she_can/providers/news.dart';
+import 'package:she_can/providers/notifications.dart';
 import 'package:she_can/screens/courses/add_course_screen.dart';
+import 'package:she_can/screens/courses/course_detail_screen.dart';
+import 'package:she_can/screens/courses/edit_course_screen.dart';
 import 'package:she_can/screens/dashboard.dart';
+import 'package:she_can/screens/login/login_screen.dart';
+import 'package:she_can/screens/splash_screen.dart';
+import 'package:she_can/screens/video_detail_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,42 +46,38 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (ctx) => CoursesNotifier(),
         ),
+        ChangeNotifierProvider(
+          create: (ctx) => NotificationsNotifier(),
+        ),
       ],
       child: MaterialApp(
         title: 'SheCan',
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        // home: const SplashScreen(),
-        home: const Dashboard(),
+        home: StreamBuilder(
+            stream: AuthNotifier().userStatus(),
+            builder: (ctx, snapshot) {
+              if (snapshot.hasData) {
+                bool userLoggedIn = snapshot.data as bool;
+                print("user status is $userLoggedIn");
+                if (userLoggedIn) {
+                  return const Dashboard();
+                } else {
+                  return const SplashScreen();
+                }
+              }
+              return const SplashScreen();
+            }),
         routes: {
+          LoginScreen.routeName: (context) => const LoginScreen(),
           AddCourseScreen.routeName: (context) => const AddCourseScreen(),
+          CourseDetailsScreen.routeName: (context) =>
+              const CourseDetailsScreen(),
+          UpdateCourseScreen.routeName: (context) => const UpdateCourseScreen(),
+          VideoScreen.routeName: (context) => const VideoScreen(),
         },
       ),
     );
   }
 }
-
-
-
-// class sheCanMain extends StatefulWidget {
-//   const sheCanMain({Key? key}) : super(key: key);
-
-//   @override
-//   State<sheCanMain> createState() => _sheCanMainState();
-// }
-
-// class _sheCanMainState extends State<sheCanMain> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       debugShowCheckedModeBanner: false,
-//       title: 'sheCan',
-//       theme: ThemeData(
-//         primarySwatch: Colors.purple,
-//         visualDensity: VisualDensity.adaptivePlatformDensity,
-//       ),
-//       home: SplashScreen(),
-//     );
-//   }
-// }
