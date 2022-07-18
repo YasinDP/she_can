@@ -73,19 +73,32 @@ class CoursesScreenState extends State<CoursesScreen>
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 List<Course> courses = snapshot.data!;
-                return GridView.builder(
-                    padding: const EdgeInsets.only(
-                        bottom: 10, left: 10, right: 10, top: 10),
-                    scrollDirection: Axis.vertical,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2),
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: courses.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      return CourseCard(course: courses[index]);
-                    });
+                return courses.isNotEmpty
+                    ? GridView.builder(
+                        padding: const EdgeInsets.only(
+                            bottom: 10, left: 10, right: 10, top: 10),
+                        scrollDirection: Axis.vertical,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2),
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: courses.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return CourseCard(course: courses[index]);
+                        })
+                    : Container(
+                        width: width,
+                        height: height * 0.6,
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 40, horizontal: 20),
+                        child: const Center(
+                          child: Text(
+                            "No courses are available at the moment! Pls check back later.",
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      );
               } else {
                 return Container(
                   width: width,
@@ -118,19 +131,32 @@ class CoursesScreenState extends State<CoursesScreen>
               if (snapshot.hasData) {
                 List<Course> courses =
                     snapshot.data!.whereType<Course>().toList();
-                return GridView.builder(
-                    padding: const EdgeInsets.only(
-                        bottom: 10, left: 10, right: 10, top: 10),
-                    scrollDirection: Axis.vertical,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2),
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: courses.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      return CourseCard(course: courses[index]);
-                    });
+                return courses.isNotEmpty
+                    ? GridView.builder(
+                        padding: const EdgeInsets.only(
+                            bottom: 10, left: 10, right: 10, top: 10),
+                        scrollDirection: Axis.vertical,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2),
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: courses.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return CourseCard(course: courses[index]);
+                        })
+                    : Container(
+                        width: width,
+                        height: height * 0.6,
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 40, horizontal: 20),
+                        child: const Center(
+                          child: Text(
+                            "You havent created any courses of your own yet! Login as an instructor to add courses now",
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      );
               } else {
                 return Container(
                   width: width,

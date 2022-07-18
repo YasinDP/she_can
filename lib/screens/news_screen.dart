@@ -120,16 +120,26 @@ class NewsScreenState extends State<NewsScreen> with TickerProviderStateMixin {
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               List<News> news = snapshot.data!;
-              return ListView.builder(
-                  padding: const EdgeInsets.only(
-                      bottom: 10, left: 10, right: 10, top: 10),
-                  scrollDirection: Axis.vertical,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: news.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return NewsCard(news: news[index]);
-                  });
+              return news.isNotEmpty
+                  ? ListView.builder(
+                      padding: const EdgeInsets.only(
+                          bottom: 10, left: 10, right: 10, top: 10),
+                      scrollDirection: Axis.vertical,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: news.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return NewsCard(news: news[index]);
+                      })
+                  : Container(
+                      width: width,
+                      height: height * 0.6,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 40, horizontal: 20),
+                      child: const Center(
+                        child: Text("No news are available to read yet!"),
+                      ),
+                    );
             } else {
               return Container(
                 width: width,
@@ -157,65 +167,78 @@ class NewsScreenState extends State<NewsScreen> with TickerProviderStateMixin {
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               List<News> news = snapshot.data!.whereType<News>().toList();
-              return ListView.builder(
-                  padding: const EdgeInsets.only(
-                      bottom: 10, left: 10, right: 10, top: 10),
-                  scrollDirection: Axis.vertical,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: news.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return Dismissible(
-                        key: Key(news[index].id),
-                        background: Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          alignment: Alignment.centerRight,
-                          decoration: DesignConfig.boxDecorationContainer(
-                              ColorsRes.red, 10),
-                          child: Container(
-                            margin: const EdgeInsets.only(right: 30),
-                            child: const Icon(
-                              Icons.delete_forever,
-                              color: Colors.white,
-                              size: 30,
+              return news.isNotEmpty
+                  ? ListView.builder(
+                      padding: const EdgeInsets.only(
+                          bottom: 10, left: 10, right: 10, top: 10),
+                      scrollDirection: Axis.vertical,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: news.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return Dismissible(
+                            key: Key(news[index].id),
+                            background: Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              alignment: Alignment.centerRight,
+                              decoration: DesignConfig.boxDecorationContainer(
+                                  ColorsRes.red, 10),
+                              child: Container(
+                                margin: const EdgeInsets.only(right: 30),
+                                child: const Icon(
+                                  Icons.delete_forever,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        direction: DismissDirection.endToStart,
-                        confirmDismiss: (DismissDirection direction) async {
-                          return await showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text("Confirm"),
-                                content: const Text(
-                                    "Are you sure you wish to delete this item?"),
-                                actions: <Widget>[
-                                  ElevatedButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(true),
-                                      child: const Text("DELETE")),
-                                  ElevatedButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(false),
-                                    child: const Text("CANCEL"),
-                                  ),
-                                ],
+                            direction: DismissDirection.endToStart,
+                            confirmDismiss: (DismissDirection direction) async {
+                              return await showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text("Confirm"),
+                                    content: const Text(
+                                        "Are you sure you wish to delete this item?"),
+                                    actions: <Widget>[
+                                      ElevatedButton(
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(true),
+                                          child: const Text("DELETE")),
+                                      ElevatedButton(
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(false),
+                                        child: const Text("CANCEL"),
+                                      ),
+                                    ],
+                                  );
+                                },
                               );
                             },
-                          );
-                        },
-                        onDismissed: (direction) {
-                          // Remove the item from the data source.
-                          // setState(() {
-                          //   news.removeAt(index);
-                          // });
-                          newsProvider.deleteNews(id: news[index].id);
-                          // Then show a snackbar.
-                          showSnackBar(context, message: "News Deleted");
-                        },
-                        child: NewsCard(news: news[index]));
-                  });
+                            onDismissed: (direction) {
+                              // Remove the item from the data source.
+                              // setState(() {
+                              //   news.removeAt(index);
+                              // });
+                              newsProvider.deleteNews(id: news[index].id);
+                              // Then show a snackbar.
+                              showSnackBar(context, message: "News Deleted");
+                            },
+                            child: NewsCard(news: news[index]));
+                      })
+                  : Container(
+                      width: width,
+                      height: height * 0.6,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 40, horizontal: 20),
+                      child: const Center(
+                        child: Text(
+                          "You havent added any news of your own yet. Pls sign in as an Instructor to add news!",
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
             } else {
               return Container(
                 width: width,

@@ -217,6 +217,7 @@ _showDeleteDialog(BuildContext context, {required String courseId}) async {
             onPressed: () {
               courseProvider.deleteCourse(id: courseId);
               Navigator.pop(context);
+              Navigator.pop(context);
             })
       ],
     ),
