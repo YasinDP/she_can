@@ -130,7 +130,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget profileMenu() {
-    User currentUser = authProvider.currentUser ?? UserProvider.currentUser!;
+    User? currentUser = authProvider.currentUser ?? UserProvider.currentUser;
     return Stack(children: <Widget>[
       CustomScrollView(
         controller: scrollController,
@@ -168,12 +168,12 @@ class ProfileScreenState extends State<ProfileScreen> {
                   child: Container(
                       margin: const EdgeInsets.only(left: 18, right: 20),
                       child: Text.rich(TextSpan(
-                          text: "${currentUser.name}\n",
+                          text: "${currentUser?.name}\n",
                           style: const TextStyle(
                               color: ColorsRes.white, fontSize: 24),
                           children: <InlineSpan>[
                             TextSpan(
-                              text: "${currentUser.username}\n",
+                              text: "${currentUser?.username}\n",
                               style: const TextStyle(
                                   color: ColorsRes.white, fontSize: 16),
                             ),
@@ -184,10 +184,10 @@ class ProfileScreenState extends State<ProfileScreen> {
             actions: <Widget>[
               TextButton(
                   onPressed: () {
-                    Provider.of<AuthNotifier>(context, listen: false)
-                        .logoutUser();
                     Navigator.of(context).pushNamedAndRemoveUntil(
                         LoginScreen.routeName, (Route<dynamic> route) => false);
+                    Provider.of<AuthNotifier>(context, listen: false)
+                        .logoutUser();
                   },
                   child: Container(
                     padding: const EdgeInsets.all(10),
@@ -255,7 +255,11 @@ class ProfileScreenState extends State<ProfileScreen> {
                             const VisualDensity(horizontal: 0, vertical: -1),
                         dense: true,
                         title: Text(
-                          currentUser.isInstructor ? "My Courses" : "Courses",
+                          currentUser == null
+                              ? ""
+                              : currentUser.isInstructor
+                                  ? "My Courses"
+                                  : "Courses",
                           style: const TextStyle(
                             fontSize: 18,
                             color: ColorsRes.black,
@@ -265,11 +269,13 @@ class ProfileScreenState extends State<ProfileScreen> {
                           'assets/images/profile_b.svg',
                           height: 25,
                         ),
-                        onTap: () => Navigator.of(context).pushNamed(
-                            SearchScreen.routeName,
-                            arguments: currentUser.isInstructor
-                                ? currentUser.username
-                                : null),
+                        onTap: () => Navigator.of(context)
+                            .pushNamed(SearchScreen.routeName,
+                                arguments: currentUser == null
+                                    ? ""
+                                    : currentUser.isInstructor
+                                        ? currentUser.username
+                                        : null),
                       ),
                       ListTile(
                         visualDensity:
