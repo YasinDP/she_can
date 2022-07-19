@@ -77,13 +77,14 @@ class AuthNotifier with ChangeNotifier {
   }
 
   Future<void> updateName(String name) async {
-    final docUser = firestore.doc(_currentUser!.id);
+    User user = _currentUser ?? UserProvider.currentUser!;
+    final docUser = firestore.doc(user.id);
     User newUser = User(
-        id: _currentUser!.id,
+        id: user.id,
         name: name,
-        username: _currentUser!.username,
-        password: _currentUser!.password,
-        isInstructor: _currentUser!.isInstructor);
+        username: user.username,
+        password: user.password,
+        isInstructor: user.isInstructor);
     docUser.update(newUser.toJson());
     _currentUser = newUser;
     UserProvider.currentUser = _currentUser;
@@ -91,13 +92,14 @@ class AuthNotifier with ChangeNotifier {
   }
 
   Future<void> updatePassword(String password) async {
-    final docUser = firestore.doc(_currentUser!.id);
+    User user = _currentUser ?? UserProvider.currentUser!;
+    final docUser = firestore.doc(user.id);
     User newUser = User(
-        id: _currentUser!.id,
-        name: _currentUser!.name,
-        username: _currentUser!.username,
+        id: user.id,
+        name: user.name,
+        username: user.username,
         password: password,
-        isInstructor: _currentUser!.isInstructor);
+        isInstructor: user.isInstructor);
     docUser.update(newUser.toJson());
     _currentUser = newUser;
     UserProvider.currentUser = _currentUser;
