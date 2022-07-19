@@ -55,7 +55,7 @@ class UpdateProfile extends StatelessWidget {
                 Expanded(
                   child: TextField(
                     autofocus: true,
-                    onChanged: (value) => onNameChanged(value),
+                    onChanged: (value) => onPasswordChanged(value),
                     decoration: const InputDecoration(
                         labelText: 'New Password',
                         hintText: "Enter new password to update"),

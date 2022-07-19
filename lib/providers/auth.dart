@@ -85,6 +85,9 @@ class AuthNotifier with ChangeNotifier {
         password: _currentUser!.password,
         isInstructor: _currentUser!.isInstructor);
     docUser.update(newUser.toJson());
+    _currentUser = newUser;
+    UserProvider.currentUser = _currentUser;
+    notifyListeners();
   }
 
   Future<void> updatePassword(String password) async {
@@ -96,6 +99,9 @@ class AuthNotifier with ChangeNotifier {
         password: password,
         isInstructor: _currentUser!.isInstructor);
     docUser.update(newUser.toJson());
+    _currentUser = newUser;
+    UserProvider.currentUser = _currentUser;
+    notifyListeners();
   }
 
   Future<void> fetchCurrentUserProfile() async {
