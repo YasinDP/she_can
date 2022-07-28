@@ -29,15 +29,25 @@ class ProfileScreenState extends State<ProfileScreen> {
   String? updatedPassword;
   String? currentPassword;
 
+  final RegExp validCharacters = RegExp(r'^[a-zA-Z]+$');
+
   updateProfile() {
     User currentUser = authProvider.currentUser ?? UserProvider.currentUser!;
+
     if (currentPassword != currentUser.password) {
       showSnackBar(context,
           message: "The existing password you entered is incorrect");
+      return;
     }
     if (currentUser.name != updatedName &&
         updatedName != null &&
         updatedName != "") {
+      if (!validCharacters.hasMatch(updatedName!)) {
+        showSnackBar(context,
+            message:
+                "Special characters and numbers are not allowed in the name field");
+        return;
+      }
       authProvider.updateName(updatedName!);
     }
     if (currentUser.password != updatedPassword &&

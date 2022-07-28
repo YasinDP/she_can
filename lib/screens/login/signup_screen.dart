@@ -41,8 +41,15 @@ class SignUpScreenState extends State<SignUpScreen> {
     String name = nameController.text;
     String username = usernameController.text;
     String password = passwordController.text;
+    final RegExp validCharacters = RegExp(r'^[a-zA-Z]+$');
     if (name.isEmpty || username.isEmpty || password.isEmpty) {
       showSnackBar(context, message: "Please fill in all details");
+      return;
+    }
+    if (!validCharacters.hasMatch(name)) {
+      showSnackBar(context,
+          message:
+              "Special characters and numbers are not allowed in the name field");
       return;
     }
     if (await auth.isUsernameTaken(username)) {
